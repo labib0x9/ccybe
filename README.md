@@ -17,7 +17,12 @@ while(1) {
     // handle conn
 }
 ```
+- Run the makefile
+```bash
+```
 
+---
+Feature:
 ---
 HTTP/1.1 web server
 - Thread Pool

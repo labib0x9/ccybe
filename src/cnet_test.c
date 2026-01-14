@@ -45,44 +45,44 @@
 // }
 
 
-#include<stdio.h>
-#include"cnet.h"
+// #include<stdio.h>
+// #include"cnet.h"
 
-// handle client function
-void handleConn(client_t client) {
+// // handle client function
+// void handleConn(client_t client) {
 
-    ConnClose(client);
-}
+//     ConnClose(client);
+// }
 
-int main() {
+// int main() {
 
-    listener_t ln = SListen("tcp", ":8080");
-    if (ln.err != 0) {
-        perror("listerner failed");
-        // exit(1);
-        return 0;
-    }
+//     listener_t ln = SListen("tcp", ":8080");
+//     if (ln.err != 0) {
+//         perror("listerner failed");
+//         // exit(1);
+//         return 0;
+//     }
 
-    // if (strlen(ln.addr.host) == 0) {
-    //     printf("NULL\n");
-    // }
+//     // if (strlen(ln.addr.host) == 0) {
+//     //     printf("NULL\n");
+//     // }
 
-    printf("%s  %d\n", ln.addr.host, ln.addr.port);
-    printf("socket fd = %d\n", ln.fd);
+//     printf("%s  %d\n", ln.addr.host, ln.addr.port);
+//     printf("socket fd = %d\n", ln.fd);
 
-    while(1) {
-        client_t conn = SAccept(ln);
-        handleConn(conn);
-    }
+//     while(1) {
+//         client_t conn = SAccept(ln);
+//         handleConn(conn);
+//     }
 
-    SClose(ln);
+//     SClose(ln);
 
-    // Test getProtocolType() function.
-    // printf("%d\n", getProtocolType("tcp"));
-    // printf("%d\n", getProtocolType("udp"));
+//     // Test getProtocolType() function.
+//     // printf("%d\n", getProtocolType("tcp"));
+//     // printf("%d\n", getProtocolType("udp"));
 
-    // printf("%d\n", getProtocolType("tCp"));
-    // printf("%d\n", getProtocolType("uDp"));
+//     // printf("%d\n", getProtocolType("tCp"));
+//     // printf("%d\n", getProtocolType("uDp"));
 
-    return 0;
-}
+//     return 0;
+// }

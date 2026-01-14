@@ -1,2 +1,2 @@
-build/main.o: main.c src/server.h
-src/server.h:
+build/main.o: main.c src/cnet.h
+src/cnet.h:
