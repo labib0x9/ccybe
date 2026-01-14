@@ -3,6 +3,7 @@
 A simple server framework.
 ---
 # Usage
+---
 - Creating a tcp server binding to all interfaces at port 8080. SListen() abstract socket(), bind(), listen()
 ```c
 listener_t ln = SListen("tcp", ":8080");
@@ -22,11 +23,12 @@ while(1) {
 ```
 
 ---
-REquirements:
-- nodejs for llhttp library, `npm install` to install dependencies.
+# Dependencies :
+---
+- llhttp (git submodule)
 
 ---
-Feature:
+# Feature:
 ---
 HTTP/1.1 web server
 - Thread Pool

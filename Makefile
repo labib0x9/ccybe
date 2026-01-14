@@ -11,7 +11,11 @@ BUILD_DIR := build
 #  llhttp Configuration
 # -------------------------
 
-LLHTTP_DIR := third_party/llhttp
+# LLHTTP_DIR := third_party/llhttp
+# LLHTTP_INC := $(LLHTTP_DIR)
+# LLHTTP_LIB := $(LLHTTP_DIR)/libllhttp.a
+
+LLHTTP_DIR := third_party/llhttp/build
 LLHTTP_INC := $(LLHTTP_DIR)
 LLHTTP_LIB := $(LLHTTP_DIR)/libllhttp.a
 

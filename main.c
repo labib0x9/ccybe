@@ -64,26 +64,12 @@ int main() {
         return 0;
     }
 
-    // if (strlen(ln.addr.host) == 0) {
-    //     printf("NULL\n");
-    // }
-
-    printf("%s  %d\n", ln.addr.host, ln.addr.port);
-    printf("socket fd = %d\n", ln.fd);
-
     while(1) {
         client_t conn = SAccept(ln);
         handleConn(conn);
     }
 
     SClose(ln);
-
-    // Test getProtocolType() function.
-    // printf("%d\n", getProtocolType("tcp"));
-    // printf("%d\n", getProtocolType("udp"));
-
-    // printf("%d\n", getProtocolType("tCp"));
-    // printf("%d\n", getProtocolType("uDp"));
 
     return 0;
 }
