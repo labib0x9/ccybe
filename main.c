@@ -47,6 +47,7 @@
 
 #include<stdio.h>
 #include"cnet.h"
+#include<llhttp.h>
 
 // handle client function
 void handleConn(client_t client) {

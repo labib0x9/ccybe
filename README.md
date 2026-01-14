@@ -22,6 +22,10 @@ while(1) {
 ```
 
 ---
+REquirements:
+- nodejs for llhttp library, `npm install` to install dependencies.
+
+---
 Feature:
 ---
 HTTP/1.1 web server
