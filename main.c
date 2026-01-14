@@ -44,14 +44,45 @@
 //     return 0;
 // }
 
-
 #include<stdio.h>
 #include"cnet.h"
 #include<llhttp.h>
+#include"khash.h"
+
+static const int BUF_SIZE = 2560;
+
+typedef struct String {
+    char *data;
+    int len, cap;
+} string_t;
+
+typedef struct {
+    char data[BUF_SIZE];
+    // int insert_at, read_at;
+} buffer_t;
+
+typedef struct {
+    char method[8];
+    char path[512];
+    // hashmap headers;
+    char *body;
+} http_request_t;
+
+static const char CLOSE_CONN[] =
+    "HTTP/1.1 200 OK\r\n"
+    "Connection: close\r\n"
+    "\r\n";
 
 // handle client function
 void handleConn(client_t client) {
+    buffer_t req;
+    int n = recv(client.fd, req.data, BUF_SIZE - 1, 0);
+    req.data[n] = '\0';
 
+    printf("%d : %s\n", n, req.data);
+
+    // Close the connection
+    send(client.fd, CLOSE_CONN, strlen(CLOSE_CONN), 0);
     ConnClose(client);
 }
 

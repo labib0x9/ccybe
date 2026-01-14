@@ -25,7 +25,8 @@ while(1) {
 ---
 # Dependencies :
 ---
-- llhttp (git submodule)
+- llhttp (git submodule) : for parsing http requests
+- klib (git submodule) : for hashing
 
 ---
 # Feature:

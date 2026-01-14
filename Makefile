@@ -1,93 +1,100 @@
 # -------------------------
-#  Project Configuration -> AI Generated
+# Project Configuration
 # -------------------------
 
-TARGET := server
-
-SRC_DIR := src
-BUILD_DIR := build
+TARGET      := server
+SRC_DIR     := src
+BUILD_DIR   := build
+THIRD_PARTY := third_party
 
 # -------------------------
-#  llhttp Configuration
+# llhttp Configuration
 # -------------------------
 
-# LLHTTP_DIR := third_party/llhttp
-# LLHTTP_INC := $(LLHTTP_DIR)
-# LLHTTP_LIB := $(LLHTTP_DIR)/libllhttp.a
-
-LLHTTP_DIR := third_party/llhttp/build
+LLHTTP_DIR := $(THIRD_PARTY)/llhttp/build
 LLHTTP_INC := $(LLHTTP_DIR)
 LLHTTP_LIB := $(LLHTTP_DIR)/libllhttp.a
 
 # -------------------------
-#  Source Files
+# khash Configuration (header-only)
 # -------------------------
 
-SRCS := main.c route_handler.c $(wildcard $(SRC_DIR)/*.c)
-OBJS := $(SRCS:%.c=$(BUILD_DIR)/%.o)
+KLIB_DIR  := $(THIRD_PARTY)/klib
+KLIB_INC  := $(KLIB_DIR)
 
 # -------------------------
-#  Compiler & Flags
+# Compiler
 # -------------------------
 
 CC := gcc
 
+# -------------------------
+# Flags
+# -------------------------
+
 CFLAGS := \
-	-Wall -Wextra -Werror -std=c11 -O2 \
+	-Wall -Wextra -Werror \
+	-std=c11 -O2 \
 	-I$(SRC_DIR) \
-	-I$(LLHTTP_INC)
+	-I$(LLHTTP_INC) \
+	-I$(KLIB_INC)
+
+DEBUG_FLAGS := -g -O0 -DDEBUG
 
 LDFLAGS :=
 
-DEBUG_FLAGS := -g -O0
+# -------------------------
+# Sources
+# -------------------------
+
+SRCS := \
+	main.c \
+	route_handler.c \
+	$(wildcard $(SRC_DIR)/*.c)
+
+OBJS := $(SRCS:%.c=$(BUILD_DIR)/%.o)
+DEPS := $(OBJS:.o=.d)
 
 # -------------------------
-#  Default Rule
+# Default Target
 # -------------------------
 
 all: $(TARGET)
 
 # -------------------------
-#  Link
+# Link
 # -------------------------
 
 $(TARGET): $(OBJS)
 	$(CC) $(OBJS) $(LLHTTP_LIB) -o $@
-	@echo "✔ Build complete → ./$(TARGET)"
+	@echo "✔ Built $(TARGET)"
 
 # -------------------------
-#  Compile
+# Compile
 # -------------------------
 
-$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
 # -------------------------
-#  Build Directory
-# -------------------------
-
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
-# -------------------------
-#  Debug Build
+# Debug
 # -------------------------
 
 debug: CFLAGS += $(DEBUG_FLAGS)
 debug: clean all
 
 # -------------------------
-#  Clean
+# Clean
 # -------------------------
 
 clean:
 	rm -rf $(BUILD_DIR) $(TARGET)
 
 # -------------------------
-#  Dependency Includes
+# Dependencies
 # -------------------------
 
--include $(OBJS:.o=.d)
+-include $(DEPS)
 
 .PHONY: all clean debug
