@@ -56,7 +56,7 @@
 /** */
 #include"cnet.h"
 
-int getProtocolType(const char* protocol) {
+int get_protocol_type(const char* protocol) {
     if (strcasecmp(protocol, "tcp") == 0) return PROTOCOL_TCP;
     if (strcasecmp(protocol, "udp") == 0) return PROTOCOL_UDP;
     return -1;
@@ -67,7 +67,7 @@ int getProtocolType(const char* protocol) {
 // ":8080"
 // "255.255.255.255:65536"
 // no invalid address or port handling right now.
-int splitAddrPort(addr_t* addr, const char* address) {
+int split_addr_port(addr_t* addr, const char* address) {
     if (!addr) return -1;
     if (!address) return -1;
 
@@ -84,7 +84,7 @@ int splitAddrPort(addr_t* addr, const char* address) {
     return 0;
 }
 
-void tcpCreateAndListenIpv4(listener_t* ln) {
+void tcp_create_and_listen_ipv4(listener_t* ln) {
     // create socket
     ln->fd = socket(AF_INET, SOCK_STREAM, 0);
     if (ln->fd < 0) {
@@ -144,16 +144,16 @@ void tcpCreateAndListenIpv4(listener_t* ln) {
 // err = 0, then no error
 // err = 1, unknown protocol
 // err = 2, socket creation
-listener_t SListen(const char* network, const char* address) {
+listener_t s_listen(const char* network, const char* address) {
     listener_t ln;
     ln.err = 0;
     ln.fd = 0;
-    ln.err = splitAddrPort(&(ln.addr), address);
+    ln.err = split_addr_port(&(ln.addr), address);
     if (ln.err != 0) return ln;
 
-    switch (getProtocolType(network)) {
+    switch (get_protocol_type(network)) {
     case PROTOCOL_TCP:
-        tcpCreateAndListenIpv4(&ln);
+        tcp_create_and_listen_ipv4(&ln);
         break;
     case PROTOCOL_UDP:
         break;
@@ -166,7 +166,7 @@ listener_t SListen(const char* network, const char* address) {
     return ln;
 }
 
-void SClose(listener_t ln) {
+void s_close(listener_t ln) {
     close(ln.fd);
 }
 
@@ -175,7 +175,7 @@ void SClose(listener_t ln) {
 // err ->
 // 0 - > passed
 // 1 -> accept error
-client_t SAccept(listener_t ln) {
+client_t s_accept(listener_t ln) {
     client_t conn;
     conn.err = 0;
     socklen_t len = sizeof(conn.addr);
@@ -190,19 +190,19 @@ client_t SAccept(listener_t ln) {
     return conn;
 }
 
-int SRead(client_t client, char* b) {
+int s_read(client_t client, char* b) {
     (void) client;
     (void) b;
     return 0;
 }
 
-int SWrite(client_t client, char* b) {
+int s_write(client_t client, char* b) {
     (void) client;
     (void) b;
     return 0;
 }
 
 // close the client fd
-void ConnClose(client_t client) {
+void conn_close(client_t client) {
     close(client.fd);
 }

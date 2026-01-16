@@ -29,7 +29,8 @@ static const char path_template[] =
     "%s";
 
 // handle client function
-void handleConn(client_t client) {
+// need to EAGAIN, EINTR
+void handle_conn(client_t client) {
 
     request_ctx_t ctx;
     init_ctx(&ctx);
@@ -85,11 +86,11 @@ void handleConn(client_t client) {
 
     // Close the connection
     send(client.fd, CLOSE_CONN, strlen(CLOSE_CONN), 0);
-    ConnClose(client);
+    conn_close(client);
 }
 
-int ServerAndListen(const char *address) {
-    listener_t ln = SListen("tcp", address);
+int serve_and_listen(const char *address) {
+    listener_t ln = s_listen("tcp", address);
     if (ln.err != 0) {
         perror("listerner failed");
         // exit(1);
@@ -97,16 +98,16 @@ int ServerAndListen(const char *address) {
     }
 
     while(1) {
-        client_t conn = SAccept(ln);
-        handleConn(conn);
+        client_t conn = s_accept(ln);
+        handle_conn(conn);
     }
 
-    SClose(ln);
+    s_close(ln);
 }
 
 int main() {
 
-    ServerAndListen(":8080");
+    serve_and_listen(":8080");
 
     return 0;
 }

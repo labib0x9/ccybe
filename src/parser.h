@@ -6,19 +6,38 @@
 #include<llhttp.h>
 #include"khash.h"
 
+#define MAX_KEY_SIZE 128
+#define MAX_VALUE_SIZE 128
+#define MAX_METHOD_SIZE 8
+#define MAX_PATH_SIZE 256
+#define MAX_HEADER_COUNT 128
+#define MAX_QUERY_COUNT 10
+
+// stores data as key-value
+typedef struct {
+    char key[MAX_KEY_SIZE];
+    char value[MAX_VALUE_SIZE];
+} pair_t;
+
 // stores headers as key-value
 typedef struct {
-    char key[128];
-    char value[128];
+    char key[MAX_KEY_SIZE];
+    char value[MAX_VALUE_SIZE];
 } header_t;
+
+// stores path and parameter
+typedef struct {
+    char path[MAX_PATH_SIZE];
+    pair_t queries[MAX_QUERY_COUNT];
+} url_t;
 
 // stores parsed request
 // multiple value in single key, stores as one entity. 
 typedef struct Request {
-    char method[8];
-    char path[256];
+    char method[MAX_METHOD_SIZE];
+    char path[MAX_PATH_SIZE];
     int path_len;
-    header_t headers[128];
+    header_t headers[MAX_HEADER_COUNT];
     int header_count;
     header_t cur_header;
     char* body; // heap allocated

@@ -73,11 +73,11 @@ enum {
     SCREATE_ERR,
 };
 
-listener_t SListen(const char* network, const char* address);
-void SClose(listener_t ln);
-client_t SAccept(listener_t ln);
-void ConnClose(client_t client);
-int SRead(client_t client, char* b);
-int SWrite(client_t client, char* b);
+listener_t s_listen(const char* network, const char* address);
+void s_close(listener_t ln);
+client_t s_accept(listener_t ln);
+void conn_close(client_t client);
+int s_read(client_t client, char* b);
+int s_write(client_t client, char* b);
 
 #endif
