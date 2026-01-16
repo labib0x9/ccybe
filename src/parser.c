@@ -1,4 +1,4 @@
-#include<parser.h>
+#include"parser.h"
 
 // set all memory to 0.
 void http_request_t_init(http_request_t* req) {
@@ -19,6 +19,7 @@ static int on_url(llhttp_t* parser, const char* at, size_t length) {
     http_request_t *r = parser->data;
     memcpy(r->path, at, length);
     r->path[length] = '\0';
+    r->path_len = length;
     return 0;
 }
 

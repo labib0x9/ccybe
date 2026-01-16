@@ -1,50 +1,5 @@
-// // #include<stdio.h>
-// // #include<string.h>
-// // #include "server.h"
-
-// // void registration() {
-// //     // Register_Route("/health", "GET", health_handler);
-// // }
-
-// // void launch(Server* server) {
-// //     printf("Waiting\n");
-// //     int new_socket = accept(server->server_fd, (struct sockaddr *) &(server->address), sizeof(server->address));
-// //     char buffer[3000];
-// //     int n = read(new_socket, buffer, sizeof(buffer) - 1);
-// //     buffer[n] = '\0';
-// //     printf("%s\n", buffer);
-
-
-// //     const char *HTTP_200_OK =
-// //     "HTTP/1.1 200 OK\r\n"
-// //     "Content-Type: text/html\r\n"
-// //     "Content-Length: %d\r\n"
-// //     "Connection: Closed\r\n"
-// //     "\r\n"
-// //     "<html><body><h1>HELLO FROM SERVER = WORLD</h1></body></body>";
-
-// //     write(new_socket, HTTP_200_OK, strlen(HTTP_200_OK));
-// //     close(new_socket);
-
-// //     printf("Done\n");
-// // }
-
-// // int main() {
-
-// //     // registration();
-
-// //     // int err = listen_and_server("127.0.0.1:8080");
-// //     // if (err == -1) {
-// //     //     return 1;
-// //     // }
-
-// //     Server server = server_construction(AF_INET, SOCK_STREAM, 0, 8080, 10, INADDR_ANY, launch);
-// //     server.launch(&server);
-
-// //     return 0;
-// // }
-
 #include<stdio.h>
+#include<stdbool.h>
 #include"cnet.h"
 #include"parser.h"
 
@@ -60,10 +15,18 @@ char BUF[BUF_SIZE];
 // For closing connection response.
 static const char CLOSE_CONN[] =
     "HTTP/1.1 200 OK\r\n" 
-    "Content-Length: 6"
+    "Content-Length: 6\r\n"
     "Connection: close\r\n"
     "\r\n"
     "CLOSED";
+
+static const char path_template[] = 
+    "HTTP/1.1 200 OK\r\n" 
+    "Content-Length: %d\r\n"
+    "Content-Type: text/plain\r\n"
+    "Connection: keep-alive\r\n"
+    "\r\n"
+    "%s";
 
 // handle client function
 void handleConn(client_t client) {
@@ -71,14 +34,53 @@ void handleConn(client_t client) {
     request_ctx_t ctx;
     init_ctx(&ctx);
 
-    int n = recv(client.fd, BUF, BUF_SIZE - 1, 0);
-    BUF[n] = '\0';
+    while(1) {
+        int n = recv(client.fd, BUF, BUF_SIZE - 1, 0);
+        if (n < 0) {
+            continue;
+        }
+        BUF[n] = '\0';
 
-    int ok = parse_http_request(&ctx, BUF, n);
-    if (ok == 1) {
-        // 400 Bad Request
-    } else {
-        printf("PATH = %s\n", ctx.req.path);
+        int ok = parse_http_request(&ctx, BUF, n);
+        if (ok == 1) {
+            // 400 Bad Request
+            printf("400 Bad Request\n");
+            reset_ctx(&ctx);
+            continue;
+        } else {
+            printf("PATH = %s , LEN = %d\n", ctx.req.path, ctx.req.path_len);
+        }
+
+        bool conn_closed = false;
+        for (int i = 0; i < ctx.req.header_count; i++) {
+            if (strcasecmp("Connection", ctx.req.headers[i].key) == 0) {
+                printf("Connection = %s\n", ctx.req.headers[i].value);
+            }
+            if (strcasecmp("Connection", ctx.req.headers[i].key) == 0 && strcasecmp("Close", ctx.req.headers[i].value) == 0) {
+                conn_closed = true;
+            }
+        }
+
+        if (conn_closed) break;
+
+        // Send the Path
+        int cap = sizeof(path_template) + ctx.req.path_len + 1;
+        char resp[cap];
+        n = snprintf(resp, cap, path_template, ctx.req.path_len, ctx.req.path);
+        if (n < 0) {
+            printf("Failed to generate resp\n");
+            continue;
+        }
+        resp[n] = '\0';
+
+        printf("RESP = %s\n", resp);
+        
+        n = send(client.fd, resp, n, 0);
+        if (n < 0) {
+            printf("Failed to respond\n");
+        }
+        
+        reset_ctx(&ctx);
     }
 
     // Close the connection
