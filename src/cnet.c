@@ -84,6 +84,7 @@ int split_addr_port(addr_t* addr, const char* address) {
     return 0;
 }
 
+// need to implement SO_RCVTIMEO
 void tcp_create_and_listen_ipv4(listener_t* ln) {
     // create socket
     ln->fd = socket(AF_INET, SOCK_STREAM, 0);
