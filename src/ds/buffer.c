@@ -39,19 +39,20 @@ void init_string(string_t* s) {
 }
 
 // a = a + b
-bool append_string(string_t *a, string_t* b) {
-    if (a == NULL || b == NULL) return false;
-    if (a->data == NULL || b->data == NULL) return false;
+// b frees
+bool append_string(string_t a, string_t b) {
+    // if (a == NULL || b == NULL) return false;
+    if (a.data == NULL || b.data == NULL) return false;
     // what happens here ? we store the pointer in another variable, waht if realloc fails ?? ptr will be null, but a->data ?
-    char *ptr = (char*) realloc(a->data, sizeof(char) * (a->len + b->len + 1));
+    char *ptr = (char*) realloc(a.data, sizeof(char) * (a.len + b.len + 1));
     if (ptr == NULL) {
         return false;
     }
-    strncpy(ptr + a->len, b->data, sizeof(char) * b->len);
-    ptr[a->len + b->len] = '\0';
-    a->data = ptr;
-    a->len += b->len;
-    free_string(*b);
+    strncpy(ptr + a.len, b.data, sizeof(char) * b.len);
+    ptr[a.len + b.len] = '\0';
+    a.data = ptr;
+    a.len += b.len;
+    free_string(b);
     return true;
 }
 

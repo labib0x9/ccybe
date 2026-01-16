@@ -88,65 +88,66 @@ enum {
     OPTION,
 };
 
-void default_page(client_t* client, request_ctx_t* ctx) {
+typedef struct Response {
+    int status_code;
+    char* status;
+    string_t body;
+} response_t;
 
-    // status
-    int status_code = HTTP_STATUS_OK;
-    char* status = "OK";
+// need to chcek for errors.
+string_t generate_response(response_t resp) {
+    int cap = resp.body.len + 128;
+    char tmp[cap];
 
-    // body
-    int cap = 512;
-    char body[cap];
-    memcpy(body, ctx->req.path, ctx->req.path_len);
-    body[ctx->req.path_len] = '\0';
-
-    //  generate template
-    char resp[cap];
-    int n = snprintf(resp, cap, path_template, status_code, status, (int) strlen(body), body);
+    int n = snprintf(tmp, cap, path_template, resp.status_code, resp.status, resp.body.len, resp.body.data);
     if (n < 0) {
         printf("Failed to generate resp\n");
         // continue;
         // 500 server internal
     }
-    resp[n] = '\0';
+    tmp[n] = '\0';
 
-    printf("RESP = %s\n", resp);
-                
-    // Send the Path
-    n = send(client->fd, resp, n, 0);
+    printf("RESP = %s\n", tmp);
+    return new_string(tmp);
+}
+
+void default_page(client_t* client, request_ctx_t* ctx) {
+    // generate response
+    response_t resp = {
+        .status_code = HTTP_STATUS_OK,
+        .status = "OK",
+        .body = new_string(ctx->req.path)
+    };
+    
+    string_t raw_resp = generate_response(resp);
+
+    // Send the respinse
+    int n = send(client->fd, raw_resp.data, raw_resp.len, 0);
     if (n < 0) {
         printf("Failed to respond\n");
     }
+
+    free_string(raw_resp);
+    free_string(resp.body);
 }
 
 void api_front_page(client_t* client, request_ctx_t* ctx) {
-    // status
-    int status_code = HTTP_STATUS_OK;
-    char* status = "OK";
+   response_t resp = {
+        .status_code = HTTP_STATUS_OK,
+        .status = "OK",
+        .body = new_string(ctx->req.path)
+    };
 
-    // body
-    int cap = 512;
-    char body[cap];
-    memcpy(body, ctx->req.path, ctx->req.path_len);
-    body[ctx->req.path_len] = '\0';
+    string_t raw_resp = generate_response(resp);
 
-    //  generate template
-    char resp[cap];
-    int n = snprintf(resp, cap, path_template, status_code, status, (int) strlen(body), body);
-    if (n < 0) {
-        printf("Failed to generate resp\n");
-        // continue;
-        // 500 server internal
-    }
-    resp[n] = '\0';
-
-    printf("RESP = %s\n", resp);
-                
-    // Send the Path
-    n = send(client->fd, resp, n, 0);
+    // Send the respinse
+    int n = send(client->fd, raw_resp.data, raw_resp.len, 0);
     if (n < 0) {
         printf("Failed to respond\n");
     }
+
+    free_string(raw_resp);
+    free_string(resp.body);
 }
 
 // status codes are from llhttp library
@@ -216,6 +217,7 @@ void handle_conn(route_t *route, client_t client) {
         // receive http request
         int n = recv(client.fd, BUF, BUF_SIZE - 1, 0);
         if (n < 0) {
+            goto RESET_CTX;
             continue;
         }
         BUF[n] = '\0';
@@ -225,7 +227,8 @@ void handle_conn(route_t *route, client_t client) {
         if (ok == 1) {
             // 400 Bad Request
             printf("400 Bad Request\n");
-            reset_ctx(&ctx);
+            // reset_ctx(&ctx);
+            goto RESET_CTX;
             continue;
         } else {
             printf("PATH = %s , LEN = %d\n", ctx.req.path, ctx.req.path_len);
@@ -255,12 +258,12 @@ void handle_conn(route_t *route, client_t client) {
             }
             default: {
                 printf("unknown method = %s\n", ctx.req.method);
-                continue;
                 // send unknown method type
             }
         }
         
-        reset_ctx(&ctx);
+        RESET_CTX:
+            reset_ctx(&ctx);
     }
 
     // Close the connection
