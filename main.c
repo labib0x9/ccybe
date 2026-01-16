@@ -3,6 +3,7 @@
 #include"cnet.h"
 #include"parser.h"
 #include"khash.h"
+#include"ds/buffer.h"
 
 typedef void (*route_handler_fn)(client_t*, request_ctx_t*);
 
@@ -60,11 +61,6 @@ int destroy_route(route_t* route) {
 }
 
 static const int BUF_SIZE = 2560;
-
-// typedef struct String {
-//     char *data;
-//     int len, cap;
-// } string_t;
 
 char BUF[BUF_SIZE];
 
@@ -304,3 +300,4 @@ int main() {
 
     return 0;
 }
+
