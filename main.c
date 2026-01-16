@@ -132,7 +132,7 @@ void default_page(client_t* client, request_ctx_t* ctx) {
 }
 
 void api_front_page(client_t* client, request_ctx_t* ctx) {
-   response_t resp = {
+    response_t resp = {
         .status_code = HTTP_STATUS_OK,
         .status = "OK",
         .body = new_string(ctx->req.path)
@@ -155,34 +155,29 @@ void not_found_page(client_t* client, request_ctx_t* ctx) {
     // (void) client;
     // (void) ctx;
 
-    // status
-    int status_code = HTTP_STATUS_NOT_FOUND;
-    char* status = "Not Found";
+    response_t resp = {
+        .status_code = HTTP_STATUS_NOT_FOUND,
+        .status = "OK",
+        .body = new_string("Path=")
+    };
 
-    // body
-    int cap = 512;
-    char body[cap];
-    memcpy(body, ctx->req.path, ctx->req.path_len);
-    memcpy(body + ctx->req.path_len, " not found", strlen(status) + 1);
-    body[strlen(status) + ctx->req.path_len + 1] = '\0';
-
-    //  generate template
-    char resp[cap];
-    int n = snprintf(resp, cap, path_template, status_code, status, (int) strlen(body), body);
-    if (n < 0) {
-        printf("Failed to generate resp\n");
-        // continue;
-        // 500 server internal
+    if (append_string_cstr(&resp.body, ctx->req.path) == false) {
+        printf("path append failed\n");
     }
-    resp[n] = '\0';
+    if (append_string_cstr(&resp.body, " not found") == false) {
+        printf("nf append failed\n");
+    }
 
-    printf("RESP = %s\n", resp);
-                
-    // Send the Path
-    n = send(client->fd, resp, n, 0);
+    string_t raw_resp = generate_response(resp);
+
+    // Send the respinse
+    int n = send(client->fd, raw_resp.data, raw_resp.len, 0);
     if (n < 0) {
         printf("Failed to respond\n");
     }
+
+    free_string(raw_resp);
+    free_string(resp.body);
 }
 
 // method types

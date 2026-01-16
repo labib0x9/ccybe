@@ -13,7 +13,8 @@ typedef struct String {
 
 string_t new_string(char* str);
 void init_string(string_t* s);
-bool append_string(string_t a, string_t b);
+bool append_string(string_t* a, string_t* b);
+bool append_string_cstr(string_t* a, char* b);
 void free_string(string_t s);
 
 #endif
