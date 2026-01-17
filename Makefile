@@ -49,9 +49,10 @@ LDFLAGS :=
 
 SRCS := \
 	main.c \
-	route_handler.c \
 	$(wildcard $(SRC_DIR)/*.c) \
 	$(wildcard $(SRC_DIR)/ds/*.c)
+
+# 	route_handler.c \
 
 OBJS := $(SRCS:%.c=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
