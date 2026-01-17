@@ -1,21 +1,5 @@
 #include"buffer.h"
 
-// typedef struct String {
-//     char *data;
-//     int len, cap;
-// } string_t;
-
-// void init_string(string_t* s) {
-//     memset(s, 0, sizeof(*s));
-//     s->cap = 15;
-//     char* buf = calloc(s->cap, s->cap);
-//     if (buf == NULL) {
-//         // error
-//         s->cap = 0;
-//     }
-//     s->data = buf;
-// }
-
 string_t new_string(char* str) {
     // printf("new_string() str=%s\n", str);
     string_t tmp = {.len = 0, .data = NULL};
@@ -45,7 +29,7 @@ bool append_string(string_t* a, string_t* b) {
     if (a == NULL || b == NULL) return false;
     if (a->data == NULL || b->data == NULL) return false;
     // what happens here ? we store the pointer in another variable, waht if realloc fails ?? ptr will be null, but a->data ?
-    char *ptr = (char*) realloc(a->data, sizeof(char) * (a->len + b->len + 1));
+    char* ptr = (char*) realloc(a->data, sizeof(char) * (a->len + b->len + 1));
     if (ptr == NULL) {
         return false;
     }
@@ -62,7 +46,7 @@ bool append_string_cstr(string_t* a, char* b) {
     if (a == NULL || b == NULL) return false;
     if (a->data == NULL) return false;
     int b_len = strlen(b);
-    char *ptr = (char*) realloc(a->data, sizeof(char) * (a->len + b_len + 1));
+    char* ptr = (char*) realloc(a->data, sizeof(char) * (a->len + b_len + 1));
     if (ptr == NULL) {
         return false;
     }
@@ -75,5 +59,5 @@ bool append_string_cstr(string_t* a, char* b) {
 }
 
 void free_string(string_t s) {
-    if (s.data) free(s.data);
+    if (s.data != NULL) free(s.data);
 }

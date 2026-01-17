@@ -1,138 +1,102 @@
-// #include<stdio.h>
-// #include<stdlib.h>
-// #include<unistd.h>
-// #include<pthread.h>
-// #include<string.h>
-// #include<stdbool.h>
+#include"threadpool.h"
 
-// const int MAX_THREAD_COUNT = 4;
-// typedef struct {
-//     pthread_t thread[MAX_THREAD_COUNT];
-//     pthread_mutex_t lock;
-//     pthread_cond_t cond;
-//     queue* q;
-//     bool shutdown;
-// } thread_pool;
+thread_pool_t* create_pool(int queueSize) {
+    thread_pool_t* pool = (thread_pool_t*) malloc(sizeof(thread_pool_t));
+    if (pool == NULL) {
+        return NULL;
+    }
+    pool->shutdown = false;
+    pool->q = (queue_t*) malloc(sizeof(queue_t));
+    if (pool->q == NULL) {
+        free(pool);
+        return NULL;
+    }
+    if (!init_queue(pool->q, queueSize)) {
+        free_queue(pool->q);
+        free(pool);
+        return NULL;
+    }
+    if (pthread_mutex_init(&pool->lock, NULL) != 0) {
+        free_queue(pool->q);
+        free(pool);
+        return NULL;
+    }
+    if (pthread_cond_init(&pool->cond, NULL) != 0) {
+        pthread_mutex_destroy(&pool->lock);
+        free_queue(pool->q);
+        free(pool);
+        return NULL;
+    }
+    for (int i = 0; i < MAX_THREAD_COUNT; i++) {
+        if (pthread_create(&(pool->thread[i]), NULL, start_pool, (void*) pool) != 0) {
+            destroy_pool(pool, i);
+            return NULL;
+        }
+    }
+    return pool;
+}
 
-// void* start_pool(void* tPool);
-// void destroy_pool(thread_pool* pool, int threadCount);
+bool push_task(thread_pool_t* pool, void (* func) (void* args), void *args) {
+    if (pool == NULL || func == NULL) {
+        return false;
+    }
+    pthread_mutex_lock(&pool->lock);
+    if (pool->shutdown) {
+        pthread_mutex_unlock(&pool->lock);
+        return false;
+    }
+    task_node_t node = {
+        .func = func,
+        .args = args
+    };
+    if (!push(pool->q, node)) {
+        pthread_mutex_unlock(&pool->lock);
+        return false;
+    }
+    pthread_cond_signal(&pool->cond);
+    pthread_mutex_unlock(&pool->lock);
+    return true;
+}
 
-// thread_pool* create_pool(int queueSize) {
-//     thread_pool* pool = (thread_pool*) malloc(sizeof(thread_pool));
-//     if (pool == NULL) {
-//         return NULL;
-//     }
-//     pool->shutdown = false;
-//     pool->q = (queue*) malloc(sizeof(queue));
-//     if (pool->q == NULL) {
-//         free(pool);
-//         return NULL;
-//     }
-//     if (!init_queue(pool->q, queueSize)) {
-//         free_queue(pool->q);
-//         free(pool);
-//         return NULL;
-//     }
-//     if (pthread_mutex_init(&pool->lock, NULL) != 0) {
-//         free_queue(pool->q);
-//         free(pool);
-//         return NULL;
-//     }
-//     if (pthread_cond_init(&pool->cond, NULL) != 0) {
-//         pthread_mutex_destroy(&pool->lock);
-//         free_queue(pool->q);
-//         free(pool);
-//         return NULL;
-//     }
-//     for (int i = 0; i < MAX_THREAD_COUNT; i++) {
-//         if (pthread_create(&(pool->thread[i]), NULL, start_pool, (void*) pool) != 0) {
-//             destroy_pool(pool, i);
-//             return NULL;
-//         }
-//     }
-//     return pool;
-// }
+void destroy_pool(thread_pool_t* pool, int threadCount) {
+    pthread_mutex_lock(&pool->lock);
+    pool->shutdown = true;
+    pthread_cond_broadcast(&pool->cond);
+    pthread_mutex_unlock(&pool->lock);
+    for (int i = 0; i < threadCount; i++) {
+        pthread_join(pool->thread[i], NULL);
+    }
+    pthread_mutex_destroy(&pool->lock);
+    pthread_cond_destroy(&pool->cond);
+    free_queue(pool->q);
+    free(pool);
+}
 
-// bool push_task(thread_pool* pool, void (* func) (void* args), void *args) {
-//     if (pool == NULL || func == NULL) {
-//         return false;
-//     }
-//     pthread_mutex_lock(&pool->lock);
-//     if (pool->shutdown) {
-//         pthread_mutex_unlock(&pool->lock);
-//         return false;
-//     }
-//     task_node node = {
-//         .func = func,
-//         .args = args
-//     };
-//     if (!push(pool->q, node)) {
-//         pthread_mutex_unlock(&pool->lock);
-//         return false;
-//     }
-//     pthread_cond_signal(&pool->cond);
-//     pthread_mutex_unlock(&pool->lock);
-//     return true;
-// }
+void* start_pool(void* tPool) {
+    thread_pool_t* pool = (thread_pool_t*) (tPool);
+    task_node_t task;
+    while(1) {
+        pthread_mutex_lock(&pool->lock);
+        while(is_empty(pool->q) && !pool->shutdown) {
+            pthread_cond_wait(&pool->cond, &pool->lock);
+        }
+        if (pool->shutdown && is_empty(pool->q)) {
+            pthread_mutex_unlock(&pool->lock);
+            break;
+        }
+        pop(pool->q, &task);
+        pthread_mutex_unlock(&pool->lock);
+        // executing task...
+        (*(task.func))(task.args);
+    }
+    pthread_exit(NULL);
+    return NULL;
+}
 
-// void destroy_pool(thread_pool* pool, int threadCount) {
-//     pthread_mutex_lock(&pool->lock);
-//     pool->shutdown = true;
-//     pthread_cond_broadcast(&pool->cond);
-//     pthread_mutex_unlock(&pool->lock);
-//     for (int i = 0; i < threadCount; i++) {
-//         pthread_join(pool->thread[i], NULL);
-//     }
-//     pthread_mutex_destroy(&pool->lock);
-//     pthread_cond_destroy(&pool->cond);
-//     free_queue(pool->q);
-//     free(pool);
-// }
-
-// void* start_pool(void* tPool) {
-//     thread_pool* pool = (thread_pool*) (tPool);
-//     task_node task;
-//     while(1) {
-//         pthread_mutex_lock(&pool->lock);
-//         while(isEmpty(pool->q) && !pool->shutdown) {
-//             pthread_cond_wait(&pool->cond, &pool->lock);
-//         }
-//         if (pool->shutdown && isEmpty(pool->q)) {
-//             pthread_mutex_unlock(&pool->lock);
-//             break;
-//         }
-//         pop(pool->q, &task);
-//         pthread_mutex_unlock(&pool->lock);
-//         // executing task...
-//         (*(task.func))(task.args);
-//     }
-//     pthread_exit(NULL);
-//     return NULL;
-// }
-
-// void print_task(void* arg) {
-//     int id = *(int*)arg;
-//     printf("[Thread %lu] Task #%d starting...\n", (unsigned long)pthread_self(), id);
-//     sleep(1);
-//     printf("[Thread %lu] Task #%d done.\n", (unsigned long) pthread_self(), id);
-//     free(arg);  // free if dynamically allocated
-// }
-
-// // int main() {
-// //     thread_pool* pool = create_pool(4);
-// //     if (pool == NULL) {
-// //         printf("Failed to create pool!\n");
-// //         return 1;
-// //     }
-
-// //     for (int i = 0; i < 10; i++) {
-// //         int* arg = malloc(sizeof(int));
-// //         *arg = i;
-// //         push_task(pool, print_task, arg);
-// //     }
-
-// //     //  sleep(5);
-// //     destroy_pool(pool, MAX_THREAD_COUNT);
-// //     printf("All tasks done, pool destroyed.\n");
-// //     return 0;
-// // }
+void print_task(void* arg) {
+    int id = *(int*)arg;
+    printf("[Thread %lu] Task #%d starting...\n", (unsigned long)pthread_self(), id);
+    sleep(1);
+    printf("[Thread %lu] Task #%d done.\n", (unsigned long) pthread_self(), id);
+    free(arg);  // free if dynamically allocated
+}

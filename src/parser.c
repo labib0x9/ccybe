@@ -93,3 +93,23 @@ int parse_http_request(request_ctx_t* ctx, const char* buf, int n) {
     if (err != HPE_OK) return 1;
     return 0;
 }
+
+// method types
+int get_mothod_type(const char* method) {
+    if (strcasecmp("get", method) == 0) return GET;
+    if (strcasecmp("post", method) == 0) return POST; 
+    return -1;
+}
+
+// Connection: close
+bool is_closed_conn(request_ctx_t* ctx) {
+    for (int i = 0; i < ctx->req.header_count; i++) {
+        if (strcasecmp("Connection", ctx->req.headers[i].key) == 0) {
+            printf("Connection = %s\n", ctx->req.headers[i].value);
+        }
+        if (strcasecmp("Connection", ctx->req.headers[i].key) == 0 && strcasecmp("Close", ctx->req.headers[i].value) == 0) {
+            return true;
+        }
+    }
+    return false;
+}

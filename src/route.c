@@ -40,3 +40,16 @@ int destroy_route(route_t* route) {
     kh_destroy(route_map, route->route);
     return 0;
 }
+
+bool route_lookup(route_handler_t* handler, route_t *route, char* path) {
+    khiter_t found = kh_get(route_map, route->route, path);
+    if (found == kh_end(route->route)) {
+        // not found
+        printf("path not found = %s\n", path);
+        return false;
+    }
+    
+    printf("found path = %s\n", path);    
+    *handler = kh_value(route->route, found);
+    return true;
+}

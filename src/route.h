@@ -24,5 +24,6 @@ typedef struct Route {
 int init_route(route_t* route);
 int route_register(route_t* route, const char* path, route_handler_fn func);
 int destroy_route(route_t* route);
+bool route_lookup(route_handler_t* handler, route_t *route, char* path);
 
 #endif

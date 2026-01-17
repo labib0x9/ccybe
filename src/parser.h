@@ -13,6 +13,14 @@
 #define MAX_HEADER_COUNT 128
 #define MAX_QUERY_COUNT 10
 
+enum {
+    GET = 1,
+    POST,
+    PUT,
+    DELETE,
+    OPTION,
+};
+
 // stores data as key-value
 typedef struct {
     char key[MAX_KEY_SIZE];
@@ -53,5 +61,8 @@ typedef struct {
 void init_ctx(request_ctx_t* ctx);
 void reset_ctx(request_ctx_t* ctx);
 int parse_http_request(request_ctx_t* ctx, const char* buf, int n);
+
+int get_mothod_type(const char* method);
+bool is_closed_conn(request_ctx_t* ctx);
 
 #endif

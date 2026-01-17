@@ -77,6 +77,27 @@ int main() {
 }
 ```
 
+- basic http server 
+```c
+#include"http.h"
+
+void default_page(client_t* client, request_ctx_t* ctx) {}
+void api_front_page(client_t* client, request_ctx_t* ctx) {}
+
+int main() {
+
+    server_t server;
+    init_server(&server);
+
+    register_route(&server, "/", default_page);
+    register_route(&server, "/api", api_front_page);
+
+    serve_and_listen(&server, ":8080");
+
+    return 0;
+}
+```
+
 ---
 # Dependencies :
 ---
@@ -84,14 +105,20 @@ int main() {
 - klib (git submodule) : for hashing
 
 ---
-# Feature:
+# What is done so far:
+---
+- Single client handling, but timeout is not set. so server keeps the connection alive until user askes to close
+- parse http request, not chnked request, only `HTTP/1.1`
+- `GET` method handling (basic), 
+- URL not catagorized into path and query, also for multiple header values 
+- Basic `Connection: keep-alive` handling
+- Routing registration and lookups (hash table)
+
+---
+# To-do:
 ---
 HTTP/1.1 web server
 - Thread Pool
-- Socket Programming
-- Keep-Alive Connection handle
-- HTTP request parser
 - Static file serving
-- Routing
 - Logger
 - Error handling
