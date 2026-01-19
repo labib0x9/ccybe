@@ -22,8 +22,10 @@ string_t new_n_string(int len) {
     string_t tmp = {.len = 0, .data = NULL};
     char* data = (char*) malloc(sizeof(char) * (len + 1));
     if (data == NULL) {
+        printf("[log] new_n_string()=malloc() failed\n");
         return tmp;
     }
+    tmp.data = data;
     tmp.len = len;
     tmp.data[len] = '\0';
     return tmp;
