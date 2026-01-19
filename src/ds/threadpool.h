@@ -7,9 +7,16 @@
 #include<pthread.h>
 #include<string.h>
 #include<stdbool.h>
+#include"../cnet.h"
+#include"../route.h"
 #include"queue.h"
 
 #define MAX_THREAD_COUNT 4
+
+typedef struct thread_node {
+    route_t *route;
+    client_t client;
+} thread_node_t;
 
 // creates 4 thread to work concurrently
 // uses mutex and locking to perform
@@ -30,7 +37,7 @@ void* start_pool(void* tPool);
 
 // push tasks to pool queue, 
 // accepts function pointer and arguments.
-bool push_task(thread_pool_t* pool, void (* func) (void* args), void *args);
+bool push_task(thread_pool_t* pool, void (* func) (void* args), route_t* route, client_t client);
 
 // destroy the pool
 void destroy_pool(thread_pool_t* pool, int threadCount);

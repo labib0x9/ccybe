@@ -31,7 +31,7 @@ typedef struct Server {
     route_t route;
     thread_pool_t* pool;
     // volatile sig_atomic_t shutdown_signal;
-    atomic_bool shut_down_server;
+    atomic_bool shut_down;
 } server_t;
 
 int serve_and_listen(server_t* server, const char *address);

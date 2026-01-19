@@ -1,6 +1,8 @@
 #include"http.h"
+#include"ds/threadpool.h"
 
 static const int QUEUE_SIZE = 128;
+static server_t* temp_server = NULL;
 
 // status codes are from llhttp library
 // 404 not found 
@@ -37,7 +39,22 @@ void handle_not_found(client_t* client, request_ctx_t* ctx) {
 // handle client function
 // need to EAGAIN, EINTR
 // need to set timeout
-void handle_conn(route_t *route, client_t client) {
+// why void* (void*) ? to push into thread pool
+// arg is heap allocated..
+// void handle_conn(route_t *route, client_t client) {
+void handle_conn(void* arg) {
+    // int offset = 0;
+    route_t* route;
+    client_t client;
+
+    // memcpy(&route, arg, sizeof(route));
+    // offset += sizeof(route);
+
+    // memcpy(&client, arg + offset, sizeof(client));
+
+    thread_node_t* tnode = (thread_node_t*) arg;
+    route = tnode->route;
+    client = tnode->client;
 
     request_ctx_t ctx;
     init_ctx(&ctx);
@@ -90,6 +107,8 @@ void handle_conn(route_t *route, client_t client) {
 
     send(client.fd, CLOSE_CONN, strlen(CLOSE_CONN), 0);
     conn_close(client);
+    if (arg) free(arg);
+    // return NULL;
 }
 
 int serve_and_listen(server_t* server, const char *address) {
@@ -99,12 +118,13 @@ int serve_and_listen(server_t* server, const char *address) {
         return 0;
     }
 
-    while(1) {
+    while(atomic_load(&server->shut_down) == false) {
         client_t conn = s_accept(ln);
-        handle_conn(&server->route, conn);
+        // handle_conn(&server->route, conn);
+        push_task(server->pool, handle_conn, &server->route, conn);
     }
 
-    s_close(ln);
+    // s_close(ln);
     destroy_route(&server->route);
     destroy_pool(server->pool, MAX_THREAD_COUNT);
     return 0;
@@ -114,6 +134,12 @@ int serve_and_listen(server_t* server, const char *address) {
 static void shut_down_server(int sig) {
 	// server->shutdown_signal = 1;
 	// close(server->ln.fd);
+    (void) sig;
+    if (sig == SIGINT) {
+        // temp_server->shut_down;
+        atomic_store(&temp_server->shut_down, true);
+        close(temp_server->ln.fd);
+    }
 }
 
 void init_server(server_t* server) {
@@ -130,6 +156,8 @@ void init_server(server_t* server) {
         return;
     }
 
+    atomic_init(&server->shut_down, false);
+
     // // handle ctrl + c
     // signal(SIGINT, shut_down_server);
 
@@ -139,6 +167,8 @@ void init_server(server_t* server) {
     sigemptyset(&sa.sa_mask);
 
     sigaction(SIGINT, &sa, NULL);
+
+    temp_server = server;
 }
 
 void register_route(server_t* server, const char* path, route_handler_fn func) {

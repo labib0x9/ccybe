@@ -40,7 +40,8 @@ thread_pool_t* create_pool(int queueSize) {
 
 // push a task to thread poll
 // signal the thread poll to wakeup
-bool push_task(thread_pool_t* pool, void (* func) (void* args), void *args) {
+// heap allocation here.
+bool push_task(thread_pool_t* pool, void (* func) (void* args), route_t* route, client_t client) {
     if (pool == NULL || func == NULL) {
         return false;
     }
@@ -49,10 +50,18 @@ bool push_task(thread_pool_t* pool, void (* func) (void* args), void *args) {
         pthread_mutex_unlock(&pool->lock);
         return false;
     }
+
+    // allocate to heap
+    // handle arguments..
+    thread_node_t* tnode = (thread_node_t*) malloc(sizeof(thread_node_t));
+    tnode->client = client;
+    tnode->route = route; 
+
     task_node_t node = {
         .func = func,
-        .args = args
+        .args = (void*) tnode
     };
+    
     if (!push(pool->q, node)) {
         pthread_mutex_unlock(&pool->lock);
         return false;
