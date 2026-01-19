@@ -17,8 +17,6 @@
 
 static const int BUF_SIZE = 2560;
 
-char BUF[BUF_SIZE];
-
 // For closing connection response.
 static const char CLOSE_CONN[] =
     "HTTP/1.1 200 OK\r\n" 

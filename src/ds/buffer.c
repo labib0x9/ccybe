@@ -18,6 +18,17 @@ string_t new_string(char* str) {
     return tmp;
 }
 
+string_t new_n_string(int len) {
+    string_t tmp = {.len = 0, .data = NULL};
+    char* data = (char*) malloc(sizeof(char) * (len + 1));
+    if (data == NULL) {
+        return tmp;
+    }
+    tmp.len = len;
+    tmp.data[len] = '\0';
+    return tmp;
+}
+
 void init_string(string_t* s) {
     if (s == NULL) return;
     *s = new_string("");

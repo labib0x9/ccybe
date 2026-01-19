@@ -47,10 +47,11 @@ void handle_conn(void* arg) {
     route_t* route;
     client_t client;
 
-    // memcpy(&route, arg, sizeof(route));
-    // offset += sizeof(route);
-
-    // memcpy(&client, arg + offset, sizeof(client));
+    string_t BUF = new_n_string(BUF_SIZE);
+    if (BUF.data == NULL) {
+        // error
+        return;
+    }
 
     thread_node_t* tnode = (thread_node_t*) arg;
     route = tnode->route;
@@ -61,16 +62,16 @@ void handle_conn(void* arg) {
 
     while(1) {
         // receive http request
-        int n = recv(client.fd, BUF, BUF_SIZE - 1, 0);
-        if (n == 0) break;
+        int n = recv(client.fd, BUF.data, BUF_SIZE - 1, 0);
+        if (n == 0 || temp_server->shut_down) break;
         if (n < 0) {
             if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) goto RESET_CTX;
             else break;
         }
-        BUF[n] = '\0';
+        BUF.data[n] = '\0';
 
         // parse http request
-        int ok = parse_http_request(&ctx, BUF, n);
+        int ok = parse_http_request(&ctx, BUF.data, n);
         if (ok == 1) {
             // 400 Bad Request
             printf("400 Bad Request\n");
