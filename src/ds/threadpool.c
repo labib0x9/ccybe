@@ -1,5 +1,7 @@
 #include"threadpool.h"
 
+// creates a threadpool of MAX_THREAD_SIZE threats.
+// initialize mutex and condition variables.
 thread_pool_t* create_pool(int queueSize) {
     thread_pool_t* pool = (thread_pool_t*) malloc(sizeof(thread_pool_t));
     if (pool == NULL) {
@@ -36,6 +38,8 @@ thread_pool_t* create_pool(int queueSize) {
     return pool;
 }
 
+// push a task to thread poll
+// signal the thread poll to wakeup
 bool push_task(thread_pool_t* pool, void (* func) (void* args), void *args) {
     if (pool == NULL || func == NULL) {
         return false;
@@ -58,6 +62,7 @@ bool push_task(thread_pool_t* pool, void (* func) (void* args), void *args) {
     return true;
 }
 
+// destroy pool
 void destroy_pool(thread_pool_t* pool, int threadCount) {
     pthread_mutex_lock(&pool->lock);
     pool->shutdown = true;
@@ -72,6 +77,8 @@ void destroy_pool(thread_pool_t* pool, int threadCount) {
     free(pool);
 }
 
+// starts the pool
+// waits until a task is pushed to pool if queue is empty
 void* start_pool(void* tPool) {
     thread_pool_t* pool = (thread_pool_t*) (tPool);
     task_node_t task;

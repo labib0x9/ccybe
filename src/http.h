@@ -1,14 +1,18 @@
+#pragma once
 #ifndef HTTP_H
 #define HTTP_H
 
 #include<stdio.h>
 #include<stdbool.h>
+#include<stdatomic.h>
+#include<signal.h>
 #include"cnet.h"
 #include"parser.h"
 #include"khash.h"
 #include"ds/buffer.h"
 #include"route.h"
 #include"response.h"
+#include"ds/threadpool.h"
 
 static const int BUF_SIZE = 2560;
 
@@ -25,6 +29,9 @@ static const char CLOSE_CONN[] =
 typedef struct Server {
     listener_t ln;
     route_t route;
+    thread_pool_t* pool;
+    // volatile sig_atomic_t shutdown_signal;
+    atomic_bool shut_down_server;
 } server_t;
 
 int serve_and_listen(server_t* server, const char *address);
