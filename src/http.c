@@ -47,18 +47,26 @@ void handle_conn(void* arg) {
     route_t* route;
     client_t client;
 
-    string_t BUF = new_n_string(BUF_SIZE);
-    if (BUF.data == NULL) {
-        // error
-        return;
-    }
-
     thread_node_t* tnode = (thread_node_t*) arg;
     route = tnode->route;
     client = tnode->client;
 
+    string_t BUF = new_n_string(BUF_SIZE);
+    if (BUF.data == NULL) {
+        // error
+        printf("[%d] BUF failed\n", client.fd);
+        if (send(client.fd, CLOSE_CONN, strlen(CLOSE_CONN), 0) < 0) {
+            printf("[%d] CLOSE_CONN also. faield\n", client.fd);
+        }
+        conn_close(client);
+        if (arg) free(arg);
+        return;
+    }
+
     request_ctx_t ctx;
     init_ctx(&ctx);
+
+    printf("[%d] Conn handling\n", client.fd);
 
     while(1) {
         // receive http request
@@ -79,12 +87,13 @@ void handle_conn(void* arg) {
         } else {
             // printf("PATH = %s, LEN = %d\n", ctx.req.path, ctx.req.path_len);
             // logs client addr..
-            // printf("[%s] = %s", client_ip, ctx.req.path);
+            // printf("[%s] = %s\n", client_ip, ctx.req.path);
 
         }
 
         // check if connection is closed or keep-alive
         if (is_closed_conn(&ctx)) {
+            printf("[%d] disconnected\n", client.fd);
             break;
         }
 

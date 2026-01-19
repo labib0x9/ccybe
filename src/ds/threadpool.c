@@ -35,6 +35,7 @@ thread_pool_t* create_pool(int queueSize) {
             return NULL;
         }
     }
+    printf("Threadpool created for %d threads\n", MAX_THREAD_COUNT);
     return pool;
 }
 
@@ -61,7 +62,7 @@ bool push_task(thread_pool_t* pool, void (* func) (void* args), route_t* route, 
         .func = func,
         .args = (void*) tnode
     };
-    
+
     if (!push(pool->q, node)) {
         pthread_mutex_unlock(&pool->lock);
         return false;
@@ -84,6 +85,8 @@ void destroy_pool(thread_pool_t* pool, int threadCount) {
     pthread_cond_destroy(&pool->cond);
     free_queue(pool->q);
     free(pool);
+
+    printf("Threadpool destrooyed\n");
 }
 
 // starts the pool
@@ -107,12 +110,4 @@ void* start_pool(void* tPool) {
     }
     pthread_exit(NULL);
     return NULL;
-}
-
-void print_task(void* arg) {
-    int id = *(int*)arg;
-    printf("[Thread %lu] Task #%d starting...\n", (unsigned long)pthread_self(), id);
-    sleep(1);
-    printf("[Thread %lu] Task #%d done.\n", (unsigned long) pthread_self(), id);
-    free(arg);  // free if dynamically allocated
 }

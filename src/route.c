@@ -6,14 +6,14 @@ int init_route(route_t* route) {
         printf("route hash table failed\n");
         return 1;
     }
+    printf("Router initialized\n");
     return 0;
 }
 
 // keys (path) are allocated on heap, must be freed.
 int route_register(route_t* route, const char* path, route_handler_fn func) {
     route_handler_t handler = {.func = func};
-    // // (void) path;
-    // (void) handler;
+
     char *key = strdup(path);   // allocate to heap.
     int ret;
     khiter_t it = kh_put(route_map, route->route, key, &ret);

@@ -105,7 +105,7 @@ int get_mothod_type(const char* method) {
 bool is_closed_conn(request_ctx_t* ctx) {
     for (int i = 0; i < ctx->req.header_count; i++) {
         if (strcasecmp("Connection", ctx->req.headers[i].key) == 0) {
-            printf("Connection = %s\n", ctx->req.headers[i].value);
+            // printf("Connection = %s\n", ctx->req.headers[i].value);
         }
         if (strcasecmp("Connection", ctx->req.headers[i].key) == 0 && strcasecmp("Close", ctx->req.headers[i].value) == 0) {
             return true;

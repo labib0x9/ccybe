@@ -52,8 +52,8 @@ void tcp_create_and_listen_ipv4(listener_t* ln) {
     // setsockopt(ln->fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
     // setsockopt(ln->fd, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
 
-    struct timeval tv = {.tv_sec = 5, .tv_usec = 0};
-    setsockopt(ln->fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    // struct timeval tv = {.tv_sec = 5, .tv_usec = 0};
+    // setsockopt(ln->fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
     // setup listening address
     // memset(&(ln->s_addr), 0, sizeof(ln->s_addr));
@@ -66,7 +66,7 @@ void tcp_create_and_listen_ipv4(listener_t* ln) {
     addr.sin_port = htons(ln->addr.port);
     if (ln->addr.host[0] == '\0') {
         addr.sin_addr.s_addr = INADDR_ANY;
-        printf("Any address\n");
+        // printf("Any address\n");
     } else {
         if (inet_pton(AF_INET, ln->addr.host, &addr.sin_addr) == -1) {
             perror("inet_pton error");
