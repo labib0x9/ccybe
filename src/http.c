@@ -77,7 +77,10 @@ void handle_conn(void* arg) {
             printf("400 Bad Request\n");
             goto RESET_CTX;
         } else {
-            printf("PATH = %s, LEN = %d\n", ctx.req.path, ctx.req.path_len);
+            // printf("PATH = %s, LEN = %d\n", ctx.req.path, ctx.req.path_len);
+            // logs client addr..
+            // printf("[%s] = %s", client_ip, ctx.req.path);
+
         }
 
         // check if connection is closed or keep-alive
@@ -111,7 +114,7 @@ void handle_conn(void* arg) {
     // send(client.fd, CLOSE_CONN, strlen(CLOSE_CONN), 0);
     conn_close(client);
     if (arg) free(arg);
-    // return NULL;
+    if (BUF.data) free_string(BUF);
 }
 
 int serve_and_listen(server_t* server, const char *address) {
@@ -123,7 +126,6 @@ int serve_and_listen(server_t* server, const char *address) {
 
     while(atomic_load(&server->shut_down) == false) {
         client_t conn = s_accept(ln);
-        // handle_conn(&server->route, conn);
         push_task(server->pool, handle_conn, &server->route, conn);
     }
 
@@ -135,11 +137,7 @@ int serve_and_listen(server_t* server, const char *address) {
 
 // Signal handling CTRL + C
 static void shut_down_server(int sig) {
-	// server->shutdown_signal = 1;
-	// close(server->ln.fd);
-    (void) sig;
     if (sig == SIGINT) {
-        // temp_server->shut_down;
         atomic_store(&temp_server->shut_down, true);
         close(temp_server->ln.fd);
     }
