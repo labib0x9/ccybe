@@ -62,8 +62,10 @@ void handle_conn(void* arg) {
     while(1) {
         // receive http request
         int n = recv(client.fd, BUF, BUF_SIZE - 1, 0);
+        if (n == 0) break;
         if (n < 0) {
-            goto RESET_CTX;
+            if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) goto RESET_CTX;
+            else break;
         }
         BUF[n] = '\0';
 
@@ -105,7 +107,7 @@ void handle_conn(void* arg) {
             reset_ctx(&ctx);
     }
 
-    send(client.fd, CLOSE_CONN, strlen(CLOSE_CONN), 0);
+    // send(client.fd, CLOSE_CONN, strlen(CLOSE_CONN), 0);
     conn_close(client);
     if (arg) free(arg);
     // return NULL;
@@ -157,6 +159,7 @@ void init_server(server_t* server) {
     }
 
     atomic_init(&server->shut_down, false);
+    temp_server = server;
 
     // // handle ctrl + c
     // signal(SIGINT, shut_down_server);
@@ -167,8 +170,6 @@ void init_server(server_t* server) {
     sigemptyset(&sa.sa_mask);
 
     sigaction(SIGINT, &sa, NULL);
-
-    temp_server = server;
 }
 
 void register_route(server_t* server, const char* path, route_handler_fn func) {

@@ -13,6 +13,7 @@
 #include"route.h"
 #include"response.h"
 #include"ds/threadpool.h"
+#include<errno.h>
 
 static const int BUF_SIZE = 2560;
 
