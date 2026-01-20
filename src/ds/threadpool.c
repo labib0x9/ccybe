@@ -39,10 +39,10 @@ thread_pool_t* create_pool(int queueSize) {
     return pool;
 }
 
-// push a task to thread poll
+// push a task to thread poll queue
 // signal the thread poll to wakeup
 // heap allocation here.
-bool push_task(thread_pool_t* pool, void (* func) (void* args), route_t* route, client_t client) {
+bool push_task(thread_pool_t* pool, void (* func) (void* args), void* arg) {
     if (pool == NULL || func == NULL) {
         return false;
     }
@@ -53,14 +53,14 @@ bool push_task(thread_pool_t* pool, void (* func) (void* args), route_t* route, 
     }
 
     // allocate to heap
-    // handle arguments..
-    thread_node_t* tnode = (thread_node_t*) malloc(sizeof(thread_node_t));
-    tnode->client = client;
-    tnode->route = route; 
+    // handle arguments.., this raisees SIGTRAP
+    // thread_node_t* tnode = (thread_node_t*) malloc(sizeof(thread_node_t));
+    // tnode->client = client;
+    // tnode->route = route; 
 
     task_node_t node = {
         .func = func,
-        .args = (void*) tnode
+        .args = (void*) arg
     };
 
     if (!push(pool->q, node)) {

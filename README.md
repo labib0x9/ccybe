@@ -113,12 +113,13 @@ int main() {
 - URL not catagorized into path and query, also for multiple header values 
 - Basic `Connection: keep-alive` handling
 - Routing registration and lookups (hash table)
+- Client connection are pushed to threadpool, then pool starts executing the task.
+- Cancel via CTRL + C, But not working, as recv() is blocked so worker thread never stops.
 
 ---
 # To-do:
 ---
 HTTP/1.1 web server
-- Thread Pool
 - Static file serving
 - Logger
 - Error handling

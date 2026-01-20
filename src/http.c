@@ -151,7 +151,14 @@ int serve_and_listen(server_t* server, const char *address) {
     while(atomic_load(&server->shut_down) == false) {
         client_t conn = s_accept(ln);
         if (conn.err == 0) {
-            push_task(server->pool, handle_conn, &server->route, conn);
+            thread_node_t* tnode = (thread_node_t*) malloc(sizeof(thread_node_t));
+            if (tnode == NULL) {
+                conn_close(conn);
+                continue;
+            }
+            tnode->client = conn;
+            tnode->route = &server->route; 
+            push_task(server->pool, handle_conn, (void*) tnode);
         } else {
             break;
         }
