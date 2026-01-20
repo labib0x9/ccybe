@@ -31,6 +31,7 @@ typedef struct Server {
     thread_pool_t* pool;
     // volatile sig_atomic_t shutdown_signal;
     atomic_bool shut_down;
+    // atomic_bool listener_closed;
 } server_t;
 
 int serve_and_listen(server_t* server, const char *address);

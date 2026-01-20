@@ -22,6 +22,7 @@ void not_found_page(client_t* client, request_ctx_t* ctx) {
 
     string_t raw_resp = generate_response(resp);
 
+    // handle SIGPIPE here.
     int n = send(client->fd, raw_resp.data, raw_resp.len, 0);
     if (n < 0) {
         printf("Failed to respond\n");
@@ -51,6 +52,13 @@ void handle_conn(void* arg) {
     route = tnode->route;
     client = tnode->client;
 
+    if (client.err != 0) {
+        printf("client error");
+        if (client.fd > 0) conn_close(client);
+        if (arg) free(arg);
+        return;
+    }
+
     string_t BUF = new_n_string(BUF_SIZE);
     if (BUF.data == NULL) {
         // error
@@ -66,7 +74,11 @@ void handle_conn(void* arg) {
     request_ctx_t ctx;
     init_ctx(&ctx);
 
-    printf("[%d] Conn handling\n", client.fd);
+    // client is ipv4
+    char clinet_ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &client.addr, clinet_ip, INET_ADDRSTRLEN);
+
+    printf("[%d][%s] Conn handling\n", client.fd, clinet_ip);
 
     while(1) {
         // receive http request
@@ -120,7 +132,10 @@ void handle_conn(void* arg) {
             reset_ctx(&ctx);
     }
 
-    // send(client.fd, CLOSE_CONN, strlen(CLOSE_CONN), 0);
+    // Handle SIGPIPE here..
+    // int close_len = send(client.fd, CLOSE_CONN, strlen(CLOSE_CONN), 0);
+
+
     conn_close(client);
     if (arg) free(arg);
     if (BUF.data) free_string(BUF);
@@ -135,10 +150,16 @@ int serve_and_listen(server_t* server, const char *address) {
 
     while(atomic_load(&server->shut_down) == false) {
         client_t conn = s_accept(ln);
-        push_task(server->pool, handle_conn, &server->route, conn);
+        if (conn.err == 0) {
+            push_task(server->pool, handle_conn, &server->route, conn);
+        } else {
+            break;
+        }
     }
 
-    // s_close(ln);
+    if (temp_server->shut_down == false) {
+        s_close(ln);
+    }
     destroy_route(&server->route);
     destroy_pool(server->pool, MAX_THREAD_COUNT);
     return 0;
