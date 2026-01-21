@@ -75,18 +75,22 @@ void handle_conn(void* arg) {
     init_ctx(&ctx);
 
     // client is ipv4
+    struct sockaddr_in *temp_client = (struct sockaddr_in*) &client.addr;
     char clinet_ip[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &client.addr, clinet_ip, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &temp_client, clinet_ip, INET_ADDRSTRLEN);
 
-    printf("[%d][%s] Conn handling\n", client.fd, clinet_ip);
+    printf("[%d][%s:%d] Conn handling\n", client.fd, clinet_ip, ntohs(temp_client->sin_port));
 
     while(1) {
         // receive http request
         int n = recv(client.fd, BUF.data, BUF_SIZE - 1, 0);
         if (n == 0 || temp_server->shut_down) break;
         if (n < 0) {
-            if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) goto RESET_CTX;
-            else break;
+            // if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) goto RESET_CTX;
+            // else break;
+            
+            // client disconnects, close the connection, but what to do.? does browser need to know if connection is closed ?
+            break;
         }
         BUF.data[n] = '\0';
 
@@ -135,6 +139,7 @@ void handle_conn(void* arg) {
     // Handle SIGPIPE here..
     // int close_len = send(client.fd, CLOSE_CONN, strlen(CLOSE_CONN), 0);
 
+    printf("[%s:%d] closed\n", clinet_ip, ntohs(temp_client->sin_port));
 
     conn_close(client);
     if (arg) free(arg);
