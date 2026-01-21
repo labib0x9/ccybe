@@ -127,6 +127,7 @@ void s_close(listener_t ln) {
 // err ->
 // 0 - > passed
 // 1 -> accept error
+// 2 -> setsock error
 client_t s_accept(listener_t ln) {
     client_t conn;
     conn.err = 0;
@@ -138,6 +139,12 @@ client_t s_accept(listener_t ln) {
         return conn;
     }
     printf("Accepted... %d\n", conn.fd);
+
+    // recv() timeouts after 5second.
+    struct timeval timeout = {.tv_sec = 5, .tv_usec = 0};
+    if (setsockopt(conn.fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+        conn.err = 2;
+    }
 
     return conn;
 }
