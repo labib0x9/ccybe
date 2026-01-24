@@ -25,6 +25,7 @@ static const char CLOSE_CONN[] =
     "\r\n"
     "CLOSED";
 
+// default timeout is 10s.
 typedef struct Server {
     listener_t ln;
     route_t route;
@@ -32,6 +33,8 @@ typedef struct Server {
     // volatile sig_atomic_t shutdown_signal;
     atomic_bool shut_down;
     // atomic_bool listener_closed;
+    time_t recv_timeout;
+    time_t send_timeout;
 } server_t;
 
 int serve_and_listen(server_t* server, const char *address);

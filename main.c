@@ -43,6 +43,11 @@ int main() {
 
     server_t server;
     init_server(&server);
+    
+    // default timeouts are 10 sec for both
+    // set custom timeout
+    server.recv_timeout = 5;
+    server.send_timeout = 8;
 
     register_route(&server, "/", home_page);
     register_route(&server, "/api", api_home_page);

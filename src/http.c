@@ -71,6 +71,19 @@ void handle_conn(void* arg) {
         return;
     }
 
+    // set send, recv timeouts
+    struct timeval send_time_out = {.tv_sec = temp_server->send_timeout, .tv_usec = 0};
+    if(setsockopt(client.fd, SOL_SOCKET, SO_SNDTIMEO, &send_time_out, sizeof(send_time_out)) < 0) {
+        printf("set send timeout error\n");
+        return;
+    }
+
+    struct timeval recv_time_out = {.tv_sec = temp_server->recv_timeout, .tv_usec = 0};
+    if (setsockopt(client.fd, SOL_SOCKET, SO_RCVTIMEO, &recv_time_out, sizeof(recv_time_out)) < 0) {
+        printf("set recv timeout error\n");
+        return;
+    }
+
     request_ctx_t ctx;
     init_ctx(&ctx);
 
@@ -139,7 +152,7 @@ void handle_conn(void* arg) {
     // Handle SIGPIPE here..
     // int close_len = send(client.fd, CLOSE_CONN, strlen(CLOSE_CONN), 0);
 
-    printf("[%s:%d] closed\n", clinet_ip, ntohs(temp_client->sin_port));
+    printf("[%d][%s:%d] closed\n", client.fd, clinet_ip, ntohs(temp_client->sin_port));
 
     conn_close(client);
     if (arg) free(arg);
@@ -198,6 +211,9 @@ void init_server(server_t* server) {
         // error
         return;
     }
+
+    server->recv_timeout = 10;
+    server->send_timeout = 10;
 
     atomic_init(&server->shut_down, false);
     temp_server = server;
