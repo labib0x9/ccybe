@@ -140,11 +140,11 @@ client_t s_accept(listener_t ln) {
     }
     printf("Accepted... %d\n", conn.fd);
 
-    // recv() timeouts after 5second.
-    struct timeval timeout = {.tv_sec = 5, .tv_usec = 0};
-    if (setsockopt(conn.fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-        conn.err = 2;
-    }
+    // // recv() timeouts after 5second.
+    // struct timeval timeout = {.tv_sec = 5, .tv_usec = 0};
+    // if (setsockopt(conn.fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+    //     conn.err = 2;
+    // }
 
     return conn;
 }
