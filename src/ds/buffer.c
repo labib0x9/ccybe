@@ -71,6 +71,12 @@ bool append_string_cstr(string_t* a, char* b) {
     return true;
 }
 
+string_t copy_string(string_t str) {
+    string_t new_str = new_n_string(str.len);
+    memcpy(new_str.data, str.data, str.len);
+    return new_str;
+}
+
 void free_string(string_t s) {
     if (s.data != NULL) free(s.data);
 }

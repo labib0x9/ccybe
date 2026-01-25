@@ -62,7 +62,7 @@ static int on_message_complete(llhttp_t* parser) {
 }
 
 // intitalize the context
-void init_ctx(request_ctx_t* ctx) {
+void init_req_ctx(request_ctx_t* ctx) {
     http_request_t_init(&ctx->req);
 
      // initialize settings
@@ -77,11 +77,11 @@ void init_ctx(request_ctx_t* ctx) {
     ctx->settings.on_headers_complete = on_header_complete;
     ctx->settings.on_method = on_method;
 
-    reset_ctx(ctx);
+    reset_req_ctx(ctx);
 }
 
 // Reset context for reuse.
-void reset_ctx(request_ctx_t* ctx) {
+void reset_req_ctx(request_ctx_t* ctx) {
     llhttp_init(&ctx->parser, HTTP_REQUEST, &ctx->settings);
     ctx->parser.data = &ctx->req;
 }

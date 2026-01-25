@@ -15,6 +15,8 @@ typedef struct String {
 // creates a string of str on heap
 string_t new_string(char* str);
 
+string_t copy_string(string_t str);
+
 string_t new_n_string(int len);
 
 // creates a empty string

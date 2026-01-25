@@ -3,6 +3,7 @@
 
 #include<stdio.h>
 #include<stdbool.h>
+#include<string.h>
 #include"cnet.h"
 #include"parser.h"
 #include"khash.h"
@@ -19,10 +20,20 @@ static const char path_template[] =
 
 typedef struct Response {
     int status_code;
-    char* status;
+    header_t headers[MAX_HEADER_COUNT];
+    int header_count;
     string_t body;
-} response_t;
+} http_response_t;
 
-string_t generate_response(response_t resp);
+typedef struct ResponseCTX {
+    http_response_t resp;
+    client_t conn;
+} response_ctx_t;
+
+string_t generate_response(response_ctx_t* ctx);
+void init_resp_ctx(response_ctx_t* ctx);
+void reset_resp_ctx(response_ctx_t* ctx);
+int write_response(response_ctx_t* ctx);
+void set_header(response_ctx_t* ctx, const char* header, const char* value);
 
 #endif

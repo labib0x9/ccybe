@@ -52,14 +52,14 @@ typedef struct Request {
 } http_request_t;
 
 // Combined. all in one context.
-typedef struct {
+typedef struct RequestCTX {
     http_request_t req;
     llhttp_t parser;
     llhttp_settings_t settings;
 } request_ctx_t;
 
-void init_ctx(request_ctx_t* ctx);
-void reset_ctx(request_ctx_t* ctx);
+void init_req_ctx(request_ctx_t* ctx);
+void reset_req_ctx(request_ctx_t* ctx);
 int parse_http_request(request_ctx_t* ctx, const char* buf, int n);
 
 int get_mothod_type(const char* method);

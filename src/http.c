@@ -6,35 +6,39 @@ static server_t* temp_server = NULL;
 
 // status codes are from llhttp library
 // 404 not found 
-void not_found_page(client_t* client, request_ctx_t* ctx) {
-    response_t resp = {
-        .status_code = HTTP_STATUS_NOT_FOUND,
-        .status = "Not Found",
-        .body = new_string("Path=")
-    };
+void not_found_page(response_ctx_t* wctx, request_ctx_t* rctx) {
+    (void) wctx;
+    (void) rctx;
 
-    if (append_string_cstr(&resp.body, ctx->req.path) == false) {
-        printf("path append failed\n");
+    wctx->resp.status_code = HTTP_STATUS_NOT_FOUND;
+    // wctx->resp.status = "Not Found";
+    wctx->resp.body = new_string("Path=");
+
+    if (append_string_cstr(&wctx->resp.body, rctx->req.path) == false) {
+        perror("1 path append");
+        // printf("path append failed\n");
     }
-    if (append_string_cstr(&resp.body, " not found") == false) {
-        printf("nf append failed\n");
-    }
-
-    string_t raw_resp = generate_response(resp);
-
-    // handle SIGPIPE here.
-    int n = send(client->fd, raw_resp.data, raw_resp.len, 0);
-    if (n < 0) {
-        printf("Failed to respond\n");
+    if (append_string_cstr(&wctx->resp.body, " not found") == false) {
+        perror("2 nf path append");
+        // printf("nf append failed\n");
     }
 
-    free_string(raw_resp);
-    free_string(resp.body);
+    // "Content-Length: %d\r\n"
+    // "Content-Type: text/plain\r\n"
+    // "Connection: keep-alive\r\n"
+
+    char length[33];
+    snprintf(length, sizeof(length), "%d", wctx->resp.body.len);
+
+    set_header(wctx, "Content-Length", length);
+    set_header(wctx, "Content-Type", "text/plain");
+    // set_header(wctx, "Connection", "keep-alive");
+    set_header(wctx, "Connection", "close");
 }
 
 // if this path exists in www file.
-void handle_not_found(client_t* client, request_ctx_t* ctx) {
-    not_found_page(client, ctx);
+void handle_not_found(response_ctx_t* wctx, request_ctx_t* rctx) {
+    not_found_page(wctx, rctx);
 }
 
 // handle client function
@@ -52,8 +56,11 @@ void handle_conn(void* arg) {
     route = tnode->route;
     client = tnode->client;
 
+
+    printf("HANDLE_CONN, SOCK= %d\n", client.fd);
+
     if (client.err != 0) {
-        printf("client error");
+        perror("client error");
         if (client.fd > 0) conn_close(client);
         if (arg) free(arg);
         return;
@@ -63,8 +70,10 @@ void handle_conn(void* arg) {
     if (BUF.data == NULL) {
         // error
         printf("[%d] BUF failed\n", client.fd);
+        perror("BUF failed");
         if (send(client.fd, CLOSE_CONN, strlen(CLOSE_CONN), 0) < 0) {
             printf("[%d] CLOSE_CONN also. faield\n", client.fd);
+            perror("CLOSE_CONN failed");
         }
         conn_close(client);
         if (arg) free(arg);
@@ -84,8 +93,11 @@ void handle_conn(void* arg) {
         return;
     }
 
-    request_ctx_t ctx;
-    init_ctx(&ctx);
+    request_ctx_t rctx;
+    response_ctx_t wctx;
+    init_req_ctx(&rctx);
+    init_resp_ctx(&wctx);
+    wctx.conn = client;
 
     // client is ipv4
     struct sockaddr_in *temp_client = (struct sockaddr_in*) &client.addr;
@@ -108,7 +120,7 @@ void handle_conn(void* arg) {
         BUF.data[n] = '\0';
 
         // parse http request
-        int ok = parse_http_request(&ctx, BUF.data, n);
+        int ok = parse_http_request(&rctx, BUF.data, n);
         if (ok == 1) {
             // 400 Bad Request
             printf("400 Bad Request\n");
@@ -120,33 +132,35 @@ void handle_conn(void* arg) {
 
         }
 
-        // check if connection is closed or keep-alive
-        if (is_closed_conn(&ctx)) {
-            printf("[%d] disconnected\n", client.fd);
-            break;
-        }
-
         // Method based response generate
-        switch(get_mothod_type(ctx.req.method)) {
+        switch(get_mothod_type(rctx.req.method)) {
             case GET: {
                 // search path in hash table
                 route_handler_t handler;
-                bool found = route_lookup(&handler, route, ctx.req.path);
+                bool found = route_lookup(&handler, route, rctx.req.path);
                 if (found) {
-                    handler.func(&client, &ctx);
+                    handler.func(&wctx, &rctx);
                 } else {
-                    handle_not_found(&client, &ctx);
+                    handle_not_found(&wctx, &rctx);
                 }
+                write_response(&wctx);
                 break;
             }
             default: {
-                printf("unknown method = %s\n", ctx.req.method);
+                printf("unknown method = %s\n", rctx.req.method);
                 // send unknown method type
             }
         }
+
+        // check if connection is closed or keep-alive
+        if (is_closed_conn(&rctx)) {
+            printf("[%d] disconnected\n", client.fd);
+            break;
+        }
         
         RESET_CTX:
-            reset_ctx(&ctx);
+            reset_req_ctx(&rctx);
+            reset_resp_ctx(&wctx);
     }
 
     // Handle SIGPIPE here..
