@@ -12,13 +12,14 @@ void not_found_page(response_ctx_t* wctx, request_ctx_t* rctx) {
 
     wctx->resp.status_code = HTTP_STATUS_NOT_FOUND;
     // wctx->resp.status = "Not Found";
-    wctx->resp.body = new_string("Path=");
+    string_t temp = new_string("Path=");
+    // wctx->resp.body = new_string("Path=");
 
-    if (append_string_cstr(&wctx->resp.body, rctx->req.path) == false) {
+    if (append_string_cstr(&temp, rctx->req.path) == false) {
         perror("1 path append");
         // printf("path append failed\n");
     }
-    if (append_string_cstr(&wctx->resp.body, " not found") == false) {
+    if (append_string_cstr(&temp, " not found") == false) {
         perror("2 nf path append");
         // printf("nf append failed\n");
     }
@@ -26,6 +27,8 @@ void not_found_page(response_ctx_t* wctx, request_ctx_t* rctx) {
     // "Content-Length: %d\r\n"
     // "Content-Type: text/plain\r\n"
     // "Connection: keep-alive\r\n"
+
+    wctx->resp.body = copy_string(temp);
 
     char length[33];
     snprintf(length, sizeof(length), "%d", wctx->resp.body.len);

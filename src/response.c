@@ -12,6 +12,8 @@ char* get_status_code(int code) {
             return "OK";
         case HTTP_STATUS_FORBIDDEN:
             return "Forbidden";
+        case HTTP_STATUS_INTERNAL_SERVER_ERROR:
+            return "Internal Server Error";
         default:
             return "Internal Server Error";
     }

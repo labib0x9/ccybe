@@ -3,54 +3,81 @@
 void home_page_test(response_ctx_t* wctx, request_ctx_t* rctx) {
     (void) wctx;
     (void) rctx;
+
+    // wctx->resp.status = "Not Found";
+    string_t temp = new_string("Path=");
+    // wctx->resp.body = new_string("Path=");
+
+    if (append_string_cstr(&temp, rctx->req.path) == false) {
+        perror("1 path append");
+        // printf("path append failed\n");
+    }
+
+    // "Content-Length: %d\r\n"
+    // "Content-Type: text/plain\r\n"
+    // "Connection: keep-alive\r\n"
+
+    wctx->resp.body = copy_string(temp);
+
+    char length[33];
+    snprintf(length, sizeof(length), "%d", wctx->resp.body.len);
+
+    wctx->resp.status_code = HTTP_STATUS_OK;
+
+    set_header(wctx, "Content-Length", length);
+    set_header(wctx, "Content-Type", "text/plain");
     set_header(wctx, "X-Hackerone-Id", "0xfaisal");
+    // set_header(wctx, "Connection", "keep-alive");
+    set_header(wctx, "Connection", "close");
 
     // set_body(wctx, rctx->req.path);
 }
 
 
 void home_page(response_ctx_t* wctx, request_ctx_t* rctx) {
-    (void) wctx;
-    (void) rctx;
-    // // generate response
-    // response_t resp = {
-    //     .status_code = HTTP_STATUS_OK,
-    //     .status = "OK",
-    //     .body = new_string(ctx->req.path)
-    // };
-    
-    // string_t raw_resp = generate_response(resp);
+    string_t temp = new_string("Path=");
 
-    // // Send the respinse
-    // int n = send(client->fd, raw_resp.data, raw_resp.len, 0);
-    // if (n < 0) {
-    //     printf("Failed to respond\n");
-    // }
+    if (append_string_cstr(&temp, rctx->req.path) == false) {
+        perror("1 path append");
+        wctx->resp.status_code = HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        goto WRITE_HEADER;
+    }
 
-    // free_string(raw_resp);
-    // free_string(resp.body);
+    wctx->resp.body = copy_string(temp);
+
+    wctx->resp.status_code = HTTP_STATUS_OK;
+
+    char length[33];
+    WRITE_HEADER:
+        snprintf(length, sizeof(length), "%d", wctx->resp.body.len);
+
+        set_header(wctx, "Content-Length", length);
+        set_header(wctx, "Content-Type", "text/plain");
+        set_header(wctx, "X-Hackerone-Id", "0xfaisal");
+        set_header(wctx, "Connection", "close");
 }
 
 void api_home_page(response_ctx_t* wctx, request_ctx_t* rctx) {
-    (void) wctx;
-    (void) rctx;
+    string_t temp = new_string("Path=");
 
-    // response_t resp = {
-    //     .status_code = HTTP_STATUS_OK,
-    //     .status = "OK",
-    //     .body = new_string(ctx->req.path)
-    // };
+    if (append_string_cstr(&temp, rctx->req.path) == false) {
+        perror("1 path append");
+        wctx->resp.status_code = HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        goto WRITE_HEADER;
+    }
 
-    // string_t raw_resp = generate_response(resp);
+    wctx->resp.body = copy_string(temp);
 
-    // // Send the respinse
-    // int n = send(client->fd, raw_resp.data, raw_resp.len, 0);
-    // if (n < 0) {
-    //     printf("Failed to respond\n");
-    // }
+    wctx->resp.status_code = HTTP_STATUS_OK;
 
-    // free_string(raw_resp);
-    // free_string(resp.body);
+    char length[33];
+    WRITE_HEADER:
+        snprintf(length, sizeof(length), "%d", wctx->resp.body.len);
+
+        set_header(wctx, "Content-Length", length);
+        set_header(wctx, "Content-Type", "text/plain");
+        set_header(wctx, "X-Hackerone-Id", "0xfaisal");
+        set_header(wctx, "Connection", "close");
 }
 
 int main() {
