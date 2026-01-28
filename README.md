@@ -190,7 +190,7 @@ make run
 
 Planned improvements for a more complete HTTP/1.1 server:
 
-* Static file serving
+* Static file serving (default path is ./www/), if index.html is not present then directory listing.
 * Structured logging
 * Robust error handling
 * Proper connection timeouts
