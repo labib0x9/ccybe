@@ -15,7 +15,7 @@ void not_found_page(response_ctx_t* wctx, request_ctx_t* rctx) {
     string_t temp = new_string("Path=");
     // wctx->resp.body = new_string("Path=");
 
-    if (append_string_cstr(&temp, rctx->req.path) == false) {
+    if (append_string_cstr(&temp, rctx->req.raw_path) == false) {
         perror("1 path append");
         // printf("path append failed\n");
     }
@@ -39,8 +39,27 @@ void not_found_page(response_ctx_t* wctx, request_ctx_t* rctx) {
     set_header(wctx, "Connection", "close");
 }
 
+// serves static files..
+void handle_static_files(response_ctx_t* wctx, request_ctx_t* rctx) {
+    (void) wctx;
+    (void) rctx;
+}
+
 // if this path exists in www file.
 void handle_not_found(response_ctx_t* wctx, request_ctx_t* rctx) {
+    printf("PATH [NOT_FOUND]= %s\n", rctx->req.raw_path);
+    string_t temp_path = new_string("./www");
+    if (append_string_cstr(&temp_path, rctx->req.raw_path) == false) {
+        // internal server error
+        return;
+    }
+    printf("PATH [NOT_FOUND]= %s\n", temp_path.data);
+
+    // if exists, then handle
+
+    free_string(temp_path);
+
+    // else report 404 - not found
     not_found_page(wctx, rctx);
 }
 
@@ -129,10 +148,10 @@ void handle_conn(void* arg) {
             printf("400 Bad Request\n");
             goto RESET_CTX;
         } else {
-            // printf("PATH = %s, LEN = %d\n", ctx.req.path, ctx.req.path_len);
-            // logs client addr..
-            // printf("[%s] = %s\n", client_ip, ctx.req.path);
-
+            printf("[%d][%s:%d]     %s\n", client.fd, clinet_ip, ntohs(temp_client->sin_port), rctx.req.url.path);
+            for (int i = 0; i < rctx.req.url.query_count; i++) {
+                printf("[%d][%s:%d] Query[%d]%s=%s\n", client.fd, clinet_ip, ntohs(temp_client->sin_port), i + 1, rctx.req.url.queries[i].key, rctx.req.url.queries[i].value);
+            }
         }
 
         // Method based response generate
@@ -140,7 +159,7 @@ void handle_conn(void* arg) {
             case GET: {
                 // search path in hash table
                 route_handler_t handler;
-                bool found = route_lookup(&handler, route, rctx.req.path);
+                bool found = route_lookup(&handler, route, rctx.req.raw_path);
                 if (found) {
                     handler.func(&wctx, &rctx);
                 } else {

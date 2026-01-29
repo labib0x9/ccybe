@@ -5,27 +5,9 @@
 #include"cnet.h"
 #include<llhttp.h>
 #include"khash.h"
-
-#define MAX_KEY_SIZE 128
-#define MAX_VALUE_SIZE 128
-#define MAX_METHOD_SIZE 8
-#define MAX_PATH_SIZE 256
-#define MAX_HEADER_COUNT 128
-#define MAX_QUERY_COUNT 10
-
-enum {
-    GET = 1,
-    POST,
-    PUT,
-    DELETE,
-    OPTION,
-};
-
-// stores data as key-value
-typedef struct {
-    char key[MAX_KEY_SIZE];
-    char value[MAX_VALUE_SIZE];
-} pair_t;
+#include"url/url.h"
+#include"url/decoder.h"
+#include"config/config.h"
 
 // stores headers as key-value
 typedef struct {
@@ -33,18 +15,13 @@ typedef struct {
     char value[MAX_VALUE_SIZE];
 } header_t;
 
-// stores path and parameter
-typedef struct {
-    char path[MAX_PATH_SIZE];
-    pair_t queries[MAX_QUERY_COUNT];
-} url_t;
-
 // stores parsed request
 // multiple value in single key, stores as one entity. 
 typedef struct Request {
     char method[MAX_METHOD_SIZE];
-    char path[MAX_PATH_SIZE];
+    char raw_path[MAX_PATH_SIZE];
     int path_len;
+    url_t url;
     header_t headers[MAX_HEADER_COUNT];
     int header_count;
     header_t cur_header;

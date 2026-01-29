@@ -14,6 +14,7 @@
 #include"response.h"
 #include"ds/threadpool.h"
 #include<errno.h>
+#include"url/decoder.h"
 
 static const int BUF_SIZE = 2560;
 

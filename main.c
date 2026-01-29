@@ -8,7 +8,7 @@ void home_page_test(response_ctx_t* wctx, request_ctx_t* rctx) {
     string_t temp = new_string("Path=");
     // wctx->resp.body = new_string("Path=");
 
-    if (append_string_cstr(&temp, rctx->req.path) == false) {
+    if (append_string_cstr(&temp, rctx->req.raw_path) == false) {
         perror("1 path append");
         // printf("path append failed\n");
     }
@@ -37,7 +37,7 @@ void home_page_test(response_ctx_t* wctx, request_ctx_t* rctx) {
 void home_page(response_ctx_t* wctx, request_ctx_t* rctx) {
     string_t temp = new_string("Path=");
 
-    if (append_string_cstr(&temp, rctx->req.path) == false) {
+    if (append_string_cstr(&temp, rctx->req.raw_path) == false) {
         perror("1 path append");
         wctx->resp.status_code = HTTP_STATUS_INTERNAL_SERVER_ERROR;
         goto WRITE_HEADER;
@@ -60,7 +60,7 @@ void home_page(response_ctx_t* wctx, request_ctx_t* rctx) {
 void api_home_page(response_ctx_t* wctx, request_ctx_t* rctx) {
     string_t temp = new_string("Path=");
 
-    if (append_string_cstr(&temp, rctx->req.path) == false) {
+    if (append_string_cstr(&temp, rctx->req.raw_path) == false) {
         perror("1 path append");
         wctx->resp.status_code = HTTP_STATUS_INTERNAL_SERVER_ERROR;
         goto WRITE_HEADER;
