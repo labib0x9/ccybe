@@ -159,7 +159,7 @@ void handle_conn(void* arg) {
             case GET: {
                 // search path in hash table
                 route_handler_t handler;
-                bool found = route_lookup(&handler, route, rctx.req.raw_path);
+                bool found = route_lookup(&handler, route, rctx.req.url.path);
                 if (found) {
                     handler.func(&wctx, &rctx);
                 } else {
