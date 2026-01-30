@@ -1,8 +1,43 @@
 #include"http.h"
 #include"ds/threadpool.h"
+#include<sys/stat.h>
+#include<sys/unistd.h>
+#include<fcntl.h>
 
 static const int QUEUE_SIZE = 128;
 static server_t* temp_server = NULL;
+
+enum {
+    JS,
+    HTML,
+    CSS,
+    PNG,
+};
+
+int get_mime(char *path) {
+    char ext[10];
+    int n = strlen(path), ext_len = 0;
+    for (int i = n - 1; i >= 0; i--) {
+        if (path[i] == '.') { break; }
+        ext[ext_len++] = path[i];
+    }
+
+    for (int i = 0; i < ext_len / 2; i++) {
+        char x = ext[i];
+        ext[i] = ext[ext_len - i - 1];
+        ext[ext_len - i - 1] = x;
+    }
+
+    ext[ext_len] = '\0';
+
+    printf("[EXT] = %s\n", ext);
+
+    if (strcasecmp(ext, "js") == 0) return JS;
+    if (strcasecmp(ext, "css") == 0) return CSS;
+    if (strcasecmp(ext, "html") == 0) return HTML;
+    if (strcasecmp(ext, "png") == 0) return PNG;
+    return -1;
+}
 
 // status codes are from llhttp library
 // 404 not found 
@@ -40,27 +75,101 @@ void not_found_page(response_ctx_t* wctx, request_ctx_t* rctx) {
 }
 
 // serves static files..
-void handle_static_files(response_ctx_t* wctx, request_ctx_t* rctx) {
+void handle_static_files(response_ctx_t* wctx, char* file_path, int file_size, request_ctx_t* rctx) {
     (void) wctx;
     (void) rctx;
+
+    int mime_id = get_mime(file_path);
+    if (mime_id == -1) {
+        printf("Unsupported mime\n");
+        return;
+    }
+
+    int file_fd = open(file_path, O_RDONLY, 0);
+    if (file_fd < 0) {
+        perror("Open file");
+        return;
+    }
+
+    wctx->resp.status_code = HTTP_STATUS_OK;
+    string_t temp = new_n_string(file_size + 1);
+
+    int read_size = read(file_fd, temp.data, temp.len);
+    if (read_size < 0) {
+        free_string(temp);
+        perror("Read file");
+        return;
+    }
+
+    temp.len = read_size;
+
+    wctx->resp.body = copy_string(temp);
+
+    char length[33];
+    snprintf(length, sizeof(length), "%d", wctx->resp.body.len);
+
+    set_header(wctx, "Content-Length", length);
+
+    switch (mime_id) {
+        case JS: {
+            set_header(wctx, "Content-Type", "application/javascript");
+            break;
+        }
+        case HTML: {
+            set_header(wctx, "Content-Type", "text/html");
+            break;
+        }
+        case PNG: {
+            set_header(wctx, "Content-Type", "image/png");
+            break;
+        }
+        case CSS: {
+            set_header(wctx, "Content-Type", "text/css");
+            break;
+        }
+    }
+
+    set_header(wctx, "Connection", "close");
 }
 
 // if this path exists in www file.
 void handle_not_found(response_ctx_t* wctx, request_ctx_t* rctx) {
-    printf("PATH [NOT_FOUND]= %s\n", rctx->req.raw_path);
+    // printf("PATH [NOT_FOUND]= %s\n", rctx->req.url.path);
     string_t temp_path = new_string("./www");
-    if (append_string_cstr(&temp_path, rctx->req.raw_path) == false) {
+    if (append_string_cstr(&temp_path, rctx->req.url.path) == false) {
         // internal server error
+        perror("handle_not_found: append");
+        free_string(temp_path);
         return;
     }
-    printf("PATH [NOT_FOUND]= %s\n", temp_path.data);
+    // printf("PATH [NOT_FOUND]= %s\n", temp_path.data);
 
     // if exists, then handle
+    struct stat st;
+    if (stat(temp_path.data, &st) < 0) {
+        // 500 internal error
+        perror("handle_not_found: stat");
+        free_string(temp_path);
+        return;
+    }
+
+    // 
+    if (S_ISDIR(st.st_mode)) {
+        // handle directory
+    } else if (S_ISREG(st.st_mode)) {
+        // handle regular file
+        printf("[REG FILE] = %s\n", temp_path.data);
+        
+        // handle if user has permission, modification
+
+        // else handle this
+        handle_static_files(wctx, temp_path.data, st.st_size, rctx);
+    } else {
+         // else report 404 - not found
+        not_found_page(wctx, rctx);
+    }
 
     free_string(temp_path);
-
-    // else report 404 - not found
-    not_found_page(wctx, rctx);
 }
 
 // handle client function

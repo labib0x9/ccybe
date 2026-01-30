@@ -180,8 +180,9 @@ make run
 * Basic `GET` method support
 * URL is not split into path and query string
 * Multiple header values are not fully supported
-* Basic `Connection: keep-alive` handling.
+* Basic `Connection: keep-alive` handling, not really. Connection are closed after the response.
 * Routing via hash table lookup
+* Static file serving, but connection is closed so same issue, no clean path (path traversal vuln).
 * Graceful shutdown is incomplete: `SIGINT` does not stop worker threads because `recv()` blocks
 
 ---
