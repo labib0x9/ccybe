@@ -38,6 +38,11 @@ typedef struct Server {
     time_t send_timeout;
 } server_t;
 
+typedef struct thread_node {
+    route_t *route;
+    client_t client;
+} thread_node_t;
+
 int serve_and_listen(server_t* server, const char *address);
 void init_server(server_t* server);
 void register_route(server_t* server, const char* path, route_handler_fn func);
