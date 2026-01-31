@@ -131,3 +131,154 @@ void set_header(response_ctx_t* ctx, const char* header, const char* value) {
 
     ctx->resp.header_count++;
 }
+
+
+void send_close_resp(response_ctx_t* wctx, request_ctx_t* rctx) {
+    (void) wctx;
+    (void) rctx;
+
+    wctx->resp.status_code = HTTP_STATUS_OK;
+    string_t temp = new_string("closed");
+    wctx->resp.body = copy_string(temp);
+
+    char length[33];
+    snprintf(length, sizeof(length), "%d", wctx->resp.body.len);
+
+    set_header(wctx, "Content-Length", length);
+    set_header(wctx, "Content-Type", "text/plain");
+    // set_header(wctx, "Connection", "keep-alive");
+    set_header(wctx, "Connection", "close");
+}
+
+// status codes are from llhttp library
+// 404 not found 
+void not_found_page(response_ctx_t* wctx, request_ctx_t* rctx) {
+    (void) wctx;
+    (void) rctx;
+
+    wctx->resp.status_code = HTTP_STATUS_NOT_FOUND;
+    // wctx->resp.status = "Not Found";
+    string_t temp = new_string("Path=");
+    // wctx->resp.body = new_string("Path=");
+
+    if (append_string_cstr(&temp, rctx->req.raw_path) == false) {
+        perror("1 path append");
+        // printf("path append failed\n");
+    }
+    if (append_string_cstr(&temp, " not found") == false) {
+        perror("2 nf path append");
+        // printf("nf append failed\n");
+    }
+
+    // "Content-Length: %d\r\n"
+    // "Content-Type: text/plain\r\n"
+    // "Connection: keep-alive\r\n"
+
+    wctx->resp.body = copy_string(temp);
+
+    char length[33];
+    snprintf(length, sizeof(length), "%d", wctx->resp.body.len);
+
+    set_header(wctx, "Content-Length", length);
+    set_header(wctx, "Content-Type", "text/plain");
+    // set_header(wctx, "Connection", "keep-alive");
+    set_header(wctx, "Connection", "keep-alive");
+}
+
+// serves static files..
+void handle_static_files(response_ctx_t* wctx, char* file_path, int file_size, request_ctx_t* rctx) {
+    (void) wctx;
+    (void) rctx;
+
+    int mime_id = get_mime(file_path);
+    if (mime_id == -1) {
+        printf("Unsupported mime\n");
+        return;
+    }
+
+    int file_fd = open(file_path, O_RDONLY, 0);
+    if (file_fd < 0) {
+        perror("Open file");
+        return;
+    }
+
+    wctx->resp.status_code = HTTP_STATUS_OK;
+    string_t temp = new_n_string(file_size + 1);
+
+    int read_size = read(file_fd, temp.data, temp.len);
+    if (read_size < 0) {
+        free_string(temp);
+        perror("Read file");
+        return;
+    }
+
+    temp.len = read_size;
+
+    wctx->resp.body = copy_string(temp);
+
+    char length[33];
+    snprintf(length, sizeof(length), "%d", wctx->resp.body.len);
+
+    set_header(wctx, "Content-Length", length);
+
+    switch (mime_id) {
+        case JS: {
+            set_header(wctx, "Content-Type", "application/javascript");
+            break;
+        }
+        case HTML: {
+            set_header(wctx, "Content-Type", "text/html");
+            break;
+        }
+        case PNG: {
+            set_header(wctx, "Content-Type", "image/png");
+            break;
+        }
+        case CSS: {
+            set_header(wctx, "Content-Type", "text/css");
+            break;
+        }
+    }
+
+    set_header(wctx, "Connection", "keep-alive");
+}
+
+// if this path exists in www file.
+void handle_not_found(response_ctx_t* wctx, request_ctx_t* rctx) {
+    // printf("PATH [NOT_FOUND]= %s\n", rctx->req.url.path);
+    string_t temp_path = new_string("./www");
+    if (append_string_cstr(&temp_path, rctx->req.url.path) == false) {
+        // internal server error
+        perror("handle_not_found: append");
+        free_string(temp_path);
+        return;
+    }
+    // printf("PATH [NOT_FOUND]= %s\n", temp_path.data);
+
+    // if exists, then handle
+    struct stat st;
+    if (stat(temp_path.data, &st) < 0) {
+        // 500 internal error
+        perror("handle_not_found: stat");
+        free_string(temp_path);
+        return;
+    }
+
+    // 
+    if (S_ISDIR(st.st_mode)) {
+        // handle directory
+    } else if (S_ISREG(st.st_mode)) {
+        // handle regular file
+        printf("[REG FILE] = %s\n", temp_path.data);
+        
+        // handle if user has permission, modification
+
+        // else handle this
+        handle_static_files(wctx, temp_path.data, st.st_size, rctx);
+    } else {
+         // else report 404 - not found
+        not_found_page(wctx, rctx);
+    }
+
+    free_string(temp_path);
+}

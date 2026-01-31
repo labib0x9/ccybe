@@ -9,6 +9,9 @@
 #include"khash.h"
 #include"ds/buffer.h"
 #include"route.h"
+#include"mime.h"
+#include<fcntl.h>
+#include<sys/stat.h>
 
 static const char path_template[] = 
     "HTTP/1.1 %d %s\r\n" 
@@ -23,6 +26,7 @@ typedef struct Response {
     header_t headers[MAX_HEADER_COUNT];
     int header_count;
     string_t body;
+    int err;
 } http_response_t;
 
 typedef struct ResponseCTX {
