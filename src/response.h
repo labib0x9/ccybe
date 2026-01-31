@@ -40,4 +40,11 @@ void reset_resp_ctx(response_ctx_t* ctx);
 int write_response(response_ctx_t* ctx);
 void set_header(response_ctx_t* ctx, const char* header, const char* value);
 
+
+void handle_not_found(response_ctx_t* wctx, request_ctx_t* rctx);
+void handle_static_files(response_ctx_t* wctx, char* file_path, int file_size, request_ctx_t* rctx);
+void not_found_page(response_ctx_t* wctx, request_ctx_t* rctx);
+void send_close_resp(response_ctx_t* wctx, request_ctx_t* rctx);
+
+
 #endif
