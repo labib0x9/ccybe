@@ -20,6 +20,8 @@ typedef struct String {
 // check str.data = NULL, for failure
 string_t new_string(char* str);
 
+void reset_string(string_t* str);
+
 // copies str to another string_t
 // str is not freed, for any error, check if data = null
 string_t copy_string(string_t str);

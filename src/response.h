@@ -25,13 +25,15 @@ typedef struct Response {
     int status_code;
     header_t headers[MAX_HEADER_COUNT];
     int header_count;
+    bool is_closed;
     string_t body;
     int err;
 } http_response_t;
 
 typedef struct ResponseCTX {
     http_response_t resp;
-    client_t conn;
+    // client_t conn;
+    string_t complete_resp;
 } response_ctx_t;
 
 string_t generate_response(response_ctx_t* ctx);

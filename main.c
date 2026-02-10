@@ -43,7 +43,7 @@ void home_page(response_ctx_t* wctx, request_ctx_t* rctx) {
         goto WRITE_HEADER;
     }
 
-    wctx->resp.body = copy_string(temp);
+    wctx->resp.body = temp;
 
     wctx->resp.status_code = HTTP_STATUS_OK;
 

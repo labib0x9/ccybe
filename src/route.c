@@ -49,7 +49,7 @@ bool route_lookup(route_handler_t* handler, route_t *route, char* path) {
     if (found == kh_end(route->route)) {
         // not found
         printf("path not found = %s\n", path);
-        perror("route not found");
+        // perror("route not found");
         return false;
     }
     

@@ -35,6 +35,7 @@ typedef struct {
 typedef struct {
     int fd;
     struct sockaddr_storage addr;
+    addr_t c_addr;
     int err;
 } client_t;
 

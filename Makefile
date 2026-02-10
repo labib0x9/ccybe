@@ -41,7 +41,7 @@ CFLAGS := \
 
 DEBUG_FLAGS := -g -O0 -DDEBUG
 
-LDFLAGS :=
+LDFLAGS := -fsanitize=address
 
 # -------------------------
 # Sources

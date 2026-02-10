@@ -53,7 +53,7 @@ int seperate_query(char* raw_path, url_t* url) {
         url->query_count++;
     }
 
-    printf("[SEP] query len=%d\n", url->query_count);
+    // printf("[SEP] query len=%d\n", url->query_count);
 
     return 0;
 }

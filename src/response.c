@@ -22,6 +22,7 @@ char* get_status_code(int code) {
 
 void init_resp_ctx(response_ctx_t* ctx) {
     (void) ctx;
+    memset(ctx, 0, sizeof(response_ctx_t));
 }
 
 void reset_resp_ctx(response_ctx_t* ctx) {
@@ -91,15 +92,15 @@ int write_response(response_ctx_t* ctx) {
     string_t resp = generate_response(ctx);
 
     printf("RESP= %s\n", resp.data);
-    printf("RESP LEN= %d\n", resp.len);
-    printf("SOCK= %d\n", ctx->conn.fd);
+    // printf("RESP LEN= %d\n", resp.len);
+    // printf("SOCK= %d\n", ctx->conn.fd);
 
     // Send the respinse
-    int n = send(ctx->conn.fd, resp.data, resp.len, 0);
-    if (n < 0) {
-        printf("SEND = Failed to respond\n");
-        perror("SEND");
-    }
+    // int n = send(ctx->conn.fd, resp.data, resp.len, 0);
+    // if (n < 0) {
+    //     printf("SEND = Failed to respond\n");
+    //     perror("SEND");
+    // }
 
     free_string(resp);
     free_string(ctx->resp.body);
@@ -124,10 +125,10 @@ void set_header(response_ctx_t* ctx, const char* header, const char* value) {
 
     // printf("%s %s  :: %d %d\n\n", header, value, klen, vlen);
     memcpy(h->key, header, klen);
-    h->key[klen] = '\0';
+    // h->key[klen] = '\0';
 
     memcpy(h->value, value, vlen);
-    h->value[vlen] = '\0';
+    // h->value[vlen] = '\0';
 
     ctx->resp.header_count++;
 }
@@ -253,6 +254,7 @@ void handle_not_found(response_ctx_t* wctx, request_ctx_t* rctx) {
     string_t temp_path = new_string("./www");
     if (append_string_cstr(&temp_path, rctx->req.url.path) == false) {
         // internal server error
+        wctx->resp.status_code = HTTP_STATUS_INTERNAL_SERVER_ERROR;
         perror("handle_not_found: append");
         free_string(temp_path);
         return;
@@ -262,7 +264,8 @@ void handle_not_found(response_ctx_t* wctx, request_ctx_t* rctx) {
     // if exists, then handle
     struct stat st;
     if (stat(temp_path.data, &st) < 0) {
-        // 500 internal error
+        // else report 404 - not found
+        not_found_page(wctx, rctx);
         perror("handle_not_found: stat");
         free_string(temp_path);
         return;
@@ -279,9 +282,6 @@ void handle_not_found(response_ctx_t* wctx, request_ctx_t* rctx) {
 
         // else handle this
         handle_static_files(wctx, temp_path.data, st.st_size, rctx);
-    } else {
-         // else report 404 - not found
-        not_found_page(wctx, rctx);
     }
 
     free_string(temp_path);

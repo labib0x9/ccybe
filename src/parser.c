@@ -90,8 +90,8 @@ void reset_req_ctx(request_ctx_t* ctx) {
 // 0 = success
 // parses http request and store it in a http_request_t struct
 // also decodes the url, seperate query and path from the url.
-int parse_http_request(request_ctx_t* ctx, const char* buf, int n) {
-    llhttp_errno_t err = llhttp_execute(&ctx->parser, buf, n);
+int parse_http_request(request_ctx_t* ctx, const char* buf, int len) {
+    llhttp_errno_t err = llhttp_execute(&ctx->parser, buf, len);
     if (err != HPE_OK) return 1;
     return seperate_query(ctx->req.raw_path, &ctx->req.url);
 }

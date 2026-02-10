@@ -77,6 +77,11 @@ string_t copy_string(string_t str) {
     return new_str;
 }
 
+void reset_string(string_t* str) {
+    memset(str->data, 0, sizeof(str->len));
+    str->len = 0;
+}
+
 void free_string(string_t s) {
     if (s.data != NULL) free(s.data);
 }
