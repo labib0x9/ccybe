@@ -3,25 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-        }
-        h1 {
-            font-size: 3rem;
-            color: #333;
-        }
-    </style>
+    <title>Ultimate Tic-Tac-Toe: Human vs AI with Timers</title>
+    <link rel="stylesheet" href="./static/style.css">
 </head>
 <body>
-    <h1>Welcome To My Site</h1>
+    <!-- Header -->
+    <header class="header">
+        <h1>Ultimate Tic-Tac-Toe</h1>
+    </header>
+    
+    <!-- Main Container with Game Arena and Sidebar -->
+    <div class="main-container">
+        <!-- Game Arena -->
+        <section class="game-arena">
+            <h2 class="arena-title">Game Arena</h2>
+            
+            <div class="board-container">
+                <!-- Human Indicator with Timer -->
+                <div class="player-indicator human-indicator" id="human-indicator">
+                    <!-- Timer Container for Human -->
+                    <div class="timer-container hidden" id="human-timer">
+                        <div class="timer-icon">⏱️</div>
+                        <div class="timer-value normal" id="human-timer-value">30s</div>
+                    </div>
+                    <div class="indicator-icon">👤</div>
+                    <div class="indicator-text">Your Turn</div>
+                </div>
+                
+                <!-- Game Board with Border - NOW HARDCODED IN HTML -->
+                <div class="game-board-wrapper">
+                    <div class="game-board" id="game-board">
+                        <!-- Board 0 (Top-Left) -->
+                        <div class="large-cell" data-board-index="0">
+                            <div class="small-board">
+                                <div class="cell" data-large-index="0" data-small-index="0"></div>
+                                <div class="cell" data-large-index="0" data-small-index="1"></div>
+                                <div class="cell" data-large-index="0" data-small-index="2"></div>
+                                <div class="cell" data-large-index="0" data-small-index="3"></div>
+                                <div class="cell" data-large-index="0" data-small-index="4"></div>
+                                <div class="cell" data-large-index="0" data-small-index="5"></div>
+                                <div class="cell" data-large-index="0" data-small-index="6"></div>
+                                <div class="cell" data-large-index="0" data-small-index="7"></div>
+                                <div class="cell" data-large-index="0" data-small-index="8"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Board 1 (Top-Center) -->
+                        <div class="large-cell" data-board-index="1">
+                            <div class="small-board">
+                                <div class="cell" data-large-index="1" data-small-index="0"></div>
+                                <div class="cell" data-large-index="1" data-small-index="1"></div>
+                                <div class="cell" data-large-index="1" data-small-index="2"></div>
+                                <div class="cell" data-large-index="1" data-small-index="3"></div>
+                                <div class="cell" data-large-index="1" data-small-index="4"></div>
+                                <div class="cell" data-large-index="1" data-small-index="5"></div>
+                                <div class="cell" data-large-index="1" data-small-index="6"></div>
+                                <div class="cell" data-large-index="1" data-small-index="7"></div>
+                                <div class="cell" data-large-index="1" data-small-index="8"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Board 2 (Top-Right) -->
+                        <div class="large-cell" data-board-index="2">
+                            <div class="small-board">
+                                <div class="cell" data-large-index="2" data-small-index="0"></div>
+                                <div class="cell" data-large-index="2" data-small-index="1"></div>
+                                <div class="cell" data-large-index="2" data-small-index="2"></div>
+                                <div class="cell" data-large-index="2" data-small-index="3"></div>
+                                <div class="cell" data-large-index="2" data-small-index="4"></div>
+                                <div class="cell" data-large-index="2" data-small-index="5"></div>
+                                <div class="cell" data-large-index="2" data-small-index="6"></div>
+                                <div class="cell" data-large-index="2" data-small-index="7"></div>
+                                <div class="cell" data-large-index="2" data-small-index="8"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Board 3 (Middle-Left) -->
+                        <div class="large-cell" data-board-index="3">
+                            <div class="small-board">
+                                <div class="cell" data-large-index="3" data-small-index="0"></div>
+                                <div class="cell" data-large-index="3" data-small-index="1"></div>
+                                <div class="cell" data-large-index="3" data-small-index="2"></div>
+                                <div class="cell" data-large-index="3" data-small-index="3"></div>
+                                <div class="cell" data-large-index="3" data-small-index="4"></div>
+                                <div class="cell" data-large-index="3" data-small-index="5"></div>
+                                <div class="cell" data-large-index="3" data-small-index="6"></div>
+                                <div class="cell" data-large-index="3" data-small-index="7"></div>
+                                <div class="cell" data-large-index="3" data-small-index="8"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Board 4 (Middle-Center) -->
+                        <div class="large-cell" data-board-index="4">
+                            <div class="small-board">
+                                <div class="cell" data-large-index="4" data-small-index="0"></div>
+                                <div class="cell" data-large-index="4" data-small-index="1"></div>
+                                <div class="cell" data-large-index="4" data-small-index="2"></div>
+                                <div class="cell" data-large-index="4" data-small-index="3"></div>
+                                <div class="cell" data-large-index="4" data-small-index="4"></div>
+                                <div class="cell" data-large-index="4" data-small-index="5"></div>
+                                <div class="cell" data-large-index="4" data-small-index="6"></div>
+                                <div class="cell" data-large-index="4" data-small-index="7"></div>
+                                <div class="cell" data-large-index="4" data-small-index="8"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Board 5 (Middle-Right) -->
+                        <div class="large-cell" data-board-index="5">
+                            <div class="small-board">
+                                <div class="cell" data-large-index="5" data-small-index="0"></div>
+                                <div class="cell" data-large-index="5" data-small-index="1"></div>
+                                <div class="cell" data-large-index="5" data-small-index="2"></div>
+                                <div class="cell" data-large-index="5" data-small-index="3"></div>
+                                <div class="cell" data-large-index="5" data-small-index="4"></div>
+                                <div class="cell" data-large-index="5" data-small-index="5"></div>
+                                <div class="cell" data-large-index="5" data-small-index="6"></div>
+                                <div class="cell" data-large-index="5" data-small-index="7"></div>
+                                <div class="cell" data-large-index="5" data-small-index="8"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Board 6 (Bottom-Left) -->
+                        <div class="large-cell" data-board-index="6">
+                            <div class="small-board">
+                                <div class="cell" data-large-index="6" data-small-index="0"></div>
+                                <div class="cell" data-large-index="6" data-small-index="1"></div>
+                                <div class="cell" data-large-index="6" data-small-index="2"></div>
+                                <div class="cell" data-large-index="6" data-small-index="3"></div>
+                                <div class="cell" data-large-index="6" data-small-index="4"></div>
+                                <div class="cell" data-large-index="6" data-small-index="5"></div>
+                                <div class="cell" data-large-index="6" data-small-index="6"></div>
+                                <div class="cell" data-large-index="6" data-small-index="7"></div>
+                                <div class="cell" data-large-index="6" data-small-index="8"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Board 7 (Bottom-Center) -->
+                        <div class="large-cell" data-board-index="7">
+                            <div class="small-board">
+                                <div class="cell" data-large-index="7" data-small-index="0"></div>
+                                <div class="cell" data-large-index="7" data-small-index="1"></div>
+                                <div class="cell" data-large-index="7" data-small-index="2"></div>
+                                <div class="cell" data-large-index="7" data-small-index="3"></div>
+                                <div class="cell" data-large-index="7" data-small-index="4"></div>
+                                <div class="cell" data-large-index="7" data-small-index="5"></div>
+                                <div class="cell" data-large-index="7" data-small-index="6"></div>
+                                <div class="cell" data-large-index="7" data-small-index="7"></div>
+                                <div class="cell" data-large-index="7" data-small-index="8"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Board 8 (Bottom-Right) -->
+                        <div class="large-cell" data-board-index="8">
+                            <div class="small-board">
+                                <div class="cell" data-large-index="8" data-small-index="0"></div>
+                                <div class="cell" data-large-index="8" data-small-index="1"></div>
+                                <div class="cell" data-large-index="8" data-small-index="2"></div>
+                                <div class="cell" data-large-index="8" data-small-index="3"></div>
+                                <div class="cell" data-large-index="8" data-small-index="4"></div>
+                                <div class="cell" data-large-index="8" data-small-index="5"></div>
+                                <div class="cell" data-large-index="8" data-small-index="6"></div>
+                                <div class="cell" data-large-index="8" data-small-index="7"></div>
+                                <div class="cell" data-large-index="8" data-small-index="8"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Indicator with Timer -->
+                <div class="player-indicator ai-indicator" id="ai-indicator">
+                    <!-- Timer Container for AI -->
+                    <div class="timer-container hidden" id="ai-timer">
+                        <div class="timer-icon">⏱️</div>
+                        <div class="timer-value normal" id="ai-timer-value">30s</div>
+                    </div>
+                    <div class="indicator-icon">🤖</div>
+                    <div class="indicator-text">Disabled</div>
+                </div>
+            </div>
+            
+            <!-- Game Over Overlay -->
+            <div class="game-overlay" id="game-overlay">
+                <div class="overlay-content">
+                    <button class="overlay-close-btn" id="overlay-close-btn">×</button>
+                    <div class="result-icon" id="result-icon">🏆</div>
+                    <h2 class="result-title" id="result-title">Game Over!</h2>
+                    <p class="result-message" id="result-message"></p>
+                    <button class="play-again-btn" id="play-again-btn">Play Again</button>
+                </div>
+            </div>
+            
+            <div class="status-container">
+                <div class="status" id="status-message">Click "Restart Game" to start playing!</div>
+            </div>
+        </section>
+        
+        <!-- Sidebar - Redesigned -->
+        <aside class="sidebar">
+            <!-- Section A: Game Control Panel -->
+            <div class="panel">
+                <h2 class="panel-title">
+                    <span class="panel-title-icon">🎮</span>
+                    Game Controls
+                </h2>
+                <div class="control-group">
+                    <div class="control-item">
+                        <div class="control-label">Timer Mode:</div>
+                        <div class="toggle-group" id="timer-toggle">
+                            <div class="toggle-option active" data-timer="with">With Timer</div>
+                            <div class="toggle-option" data-timer="without">Without Timer</div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-item">
+                        <div class="control-label">Difficulty:</div>
+                        <div class="toggle-group" id="difficulty-toggle">
+                            <div class="toggle-option active" data-difficulty="2">Easy</div>
+                            <div class="toggle-option" data-difficulty="4">Medium</div>
+                            <div class="toggle-option" data-difficulty="6">Hard</div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-item">
+                        <div class="control-label">First Player:</div>
+                        <div class="toggle-group" id="first-player-toggle">
+                            <div class="toggle-option active" data-player="human">Human</div>
+                            <div class="toggle-option" data-player="agent">Agent</div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-item timer-duration-container" id="timer-duration-container">
+                        <div class="control-label">Timer Duration (seconds):</div>
+                        <select class="dropdown-select" id="timer-duration">
+                            <option value="15">15 seconds</option>
+                            <option value="30" selected>30 seconds</option>
+                            <option value="45">45 seconds</option>
+                            <option value="60">60 seconds</option>
+                            <option value="90">90 seconds</option>
+                            <option value="120">120 seconds</option>
+                        </select>
+                    </div>
+                    
+                    <button class="action-btn" id="restart-btn">🔄 Restart Game</button>
+                </div>
+            </div>
+
+
+            <!-- Section B: Recent Moves -->
+            <div class="panel">
+                <h2 class="panel-title">
+                    <span class="panel-title-icon">📝</span>
+                    Recent Moves
+                </h2>
+                <div class="moves-container">
+                    <ul class="moves-list" id="moves-list">
+                        <div class="empty-moves">No moves yet. Click "Restart Game" to start!</div>
+                    </ul>
+                </div>
+            </div>
+
+            
+            <!-- Section C: Statistics Panel -->
+            <div class="panel">
+                <h2 class="panel-title">
+                    <span class="panel-title-icon">📊</span>
+                    Game Statistics
+                </h2>
+                <div class="stats-container">
+                    <div class="stat-box human">
+                        <div class="stat-value" id="human-wins">0</div>
+                        <div class="stat-label">Human Wins</div>
+                    </div>
+                    <div class="stat-box agent">
+                        <div class="stat-value" id="agent-wins">0</div>
+                        <div class="stat-label">Agent Wins</div>
+                    </div>
+                    <div class="stat-box draw">
+                        <div class="stat-value" id="draws">0</div>
+                        <div class="stat-label">Draws</div>
+                    </div>
+                </div>
+                <div class="control-label" style="margin-top: 15px; text-align: center; color: #888;">
+                    Timer Ends: <span id="timer-wins">0</span>
+                </div>
+            </div>
+            
+            
+            <!-- Section D: How to Play -->
+            <div class="panel">
+                <h2 class="panel-title">
+                    <span class="panel-title-icon">❓</span>
+                    How to Play
+                </h2>
+                
+                <div class="legend-container">
+                    <div class="legend-item">
+                        <div class="legend-symbol legend-human">X</div>
+                        <div class="legend-label">= Human</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-symbol legend-agent">O</div>
+                        <div class="legend-label">= Agent</div>
+                    </div>
+                </div>
+                
+                <div class="board-diagram">
+                    <div class="diagram-grid">
+                        <div class="diagram-cell">1</div>
+                        <div class="diagram-cell">2</div>
+                        <div class="diagram-cell">3</div>
+                        <div class="diagram-cell">4</div>
+                        <div class="diagram-cell">5</div>
+                        <div class="diagram-cell">6</div>
+                        <div class="diagram-cell">7</div>
+                        <div class="diagram-cell">8</div>
+                        <div class="diagram-cell">9</div>
+                    </div>
+                    <div class="diagram-label">Inner Board Numbering (1-9)</div>
+                </div>
+                
+                <ul class="rules-list">
+                    <li>Win 3 small boards in a row to win the game</li>
+                    <li>Your next move is determined by your opponent's last move</li>
+                    <li>If a board is full or won, you can choose any board</li>
+                    <li>Win a small board by getting 3 in a row</li>
+                    <li>Human plays X, Agent plays O</li>
+                    <li>First player can be set in Game Controls</li>
+                    <li>Each player has a timer for their turn (if enabled)</li>
+                    <li>If timer runs out, the other player wins</li>
+                    <li>Timer duration can be adjusted in settings</li>
+                    <li>Toggle timers on/off in Game Controls</li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <script src="./static/main.js"></script>
 </body>
 </html>

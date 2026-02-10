@@ -17,8 +17,8 @@ static int on_method(llhttp_t* parser, const char* at, size_t len) {
 // length = path length
 static int on_url(llhttp_t* parser, const char* at, size_t length) {
     http_request_t *r = parser->data;
-    memcpy(r->path, at, length);
-    r->path[length] = '\0';
+    memcpy(r->raw_path, at, length);
+    r->raw_path[length] = '\0';
     r->path_len = length;
     return 0;
 }
@@ -62,7 +62,7 @@ static int on_message_complete(llhttp_t* parser) {
 }
 
 // intitalize the context
-void init_ctx(request_ctx_t* ctx) {
+void init_req_ctx(request_ctx_t* ctx) {
     http_request_t_init(&ctx->req);
 
      // initialize settings
@@ -77,21 +77,23 @@ void init_ctx(request_ctx_t* ctx) {
     ctx->settings.on_headers_complete = on_header_complete;
     ctx->settings.on_method = on_method;
 
-    reset_ctx(ctx);
+    reset_req_ctx(ctx);
 }
 
 // Reset context for reuse.
-void reset_ctx(request_ctx_t* ctx) {
+void reset_req_ctx(request_ctx_t* ctx) {
     llhttp_init(&ctx->parser, HTTP_REQUEST, &ctx->settings);
     ctx->parser.data = &ctx->req;
 }
 
 // 1 = 400 Bad Request
 // 0 = success
-int parse_http_request(request_ctx_t* ctx, const char* buf, int n) {
-    llhttp_errno_t err = llhttp_execute(&ctx->parser, buf, n);
+// parses http request and store it in a http_request_t struct
+// also decodes the url, seperate query and path from the url.
+int parse_http_request(request_ctx_t* ctx, const char* buf, int len) {
+    llhttp_errno_t err = llhttp_execute(&ctx->parser, buf, len);
     if (err != HPE_OK) return 1;
-    return 0;
+    return seperate_query(ctx->req.raw_path, &ctx->req.url);
 }
 
 // method types

@@ -41,7 +41,7 @@ CFLAGS := \
 
 DEBUG_FLAGS := -g -O0 -DDEBUG
 
-LDFLAGS :=
+LDFLAGS := -fsanitize=address
 
 # -------------------------
 # Sources
@@ -50,7 +50,8 @@ LDFLAGS :=
 SRCS := \
 	main.c \
 	$(wildcard $(SRC_DIR)/*.c) \
-	$(wildcard $(SRC_DIR)/ds/*.c)
+	$(wildcard $(SRC_DIR)/ds/*.c) \
+	$(wildcard $(SRC_DIR)/url/*.c)
 
 # 	route_handler.c \
 

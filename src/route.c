@@ -4,6 +4,7 @@ int init_route(route_t* route) {
     route->route = kh_init(route_map);
     if (route->route == NULL) { 
         printf("route hash table failed\n");
+        perror("route-init");
         return 1;
     }
     printf("Router initialized\n");
@@ -18,8 +19,10 @@ int route_register(route_t* route, const char* path, route_handler_fn func) {
     int ret;
     khiter_t it = kh_put(route_map, route->route, key, &ret);
     if (ret == -1) {
+        perror("route register - alloc");
         return 1;   // allocation failed
     } else if (ret == 0) {
+        perror("route exits");
         return 2;   // route exits
     }
 
@@ -46,6 +49,7 @@ bool route_lookup(route_handler_t* handler, route_t *route, char* path) {
     if (found == kh_end(route->route)) {
         // not found
         printf("path not found = %s\n", path);
+        // perror("route not found");
         return false;
     }
     

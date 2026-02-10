@@ -7,8 +7,12 @@
 #include"parser.h"
 #include"khash.h"
 #include"ds/buffer.h"
+#include"response.h"
 
-typedef void (*route_handler_fn)(client_t*, request_ctx_t*);
+typedef struct ResponseCTX response_ctx_t;
+typedef struct RequestCTX request_ctx_t;
+
+typedef void (*route_handler_fn)(response_ctx_t*, request_ctx_t*);
 
 typedef struct Handler {
     route_handler_fn func;

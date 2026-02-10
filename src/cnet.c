@@ -132,13 +132,13 @@ client_t s_accept(listener_t ln) {
     client_t conn;
     conn.err = 0;
     socklen_t len = sizeof(conn.addr);
-    printf("Listening...\n");
+    // printf("Listening...\n");
     conn.fd = accept(ln.fd, (struct sockaddr*) &conn.addr, &len);
     if (conn.fd < 0) {
         conn.err = 1;
         return conn;
     }
-    printf("Accepted... %d\n", conn.fd);
+    // printf("Accepted... %d\n", conn.fd);
 
     // // recv() timeouts after 5second.
     // struct timeval timeout = {.tv_sec = 5, .tv_usec = 0};

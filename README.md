@@ -1,12 +1,17 @@
 # clitocybe
 
-A minimal HTTP server framework written in C, focused on learning low-level networking, request parsing, and server architecture.
+A minimal HTTP server written in C, focused on learning low-level networking, event loops, multithreading, file serving and server architecture.
 
 ---
 
 ## Overview
 
-`clitocybe` provides a thin abstraction over POSIX sockets and HTTP parsing to help you build a basic HTTP/1.1 server without hiding core system concepts. It is **not** a production-ready framework; it is a learning-oriented project.
+`clitocybe` provides a thin abstraction over POSIX sockets and HTTP parsing to help you build a basic HTTP/1.1 server without hiding core system concepts.
+It is **not** a production-ready framework; it is a learning-oriented project. Also it uses kqueue for event loop, which is only available in **FreeBSD** based OS (MacOS).
+
+---
+
+## Diagram
 
 ---
 
@@ -15,8 +20,8 @@ A minimal HTTP server framework written in C, focused on learning low-level netw
 * TCP server abstraction (`socket`, `bind`, `listen`, `accept`)
 * Basic HTTP/1.1 request parsing (via `llhttp`)
 * Simple routing system (hash table based)
-* Thread pool–based client handling
-* Basic keep-alive support
+* Event-loop–based client handling with a thread-pool–based request parser and response generator
+* Static file serving
 
 ---
 
@@ -116,17 +121,22 @@ int main(void) {
 ```c
 #include "http.h"
 
-void default_page(client_t *client, request_ctx_t *ctx) {
+void default_page(response_ctx_t* wctx, request_ctx_t* rctx) {
     // handle root path
 }
 
-void api_front_page(client_t *client, request_ctx_t *ctx) {
+void api_front_page(response_ctx_t* wctx, request_ctx_t* rctx) {
     // handle /api
 }
 
 int main(void) {
     server_t server;
     init_server(&server);
+
+    // default timeouts are 10 sec for both
+    // set custom timeout
+    server.recv_timeout = 60;
+    server.send_timeout = 60;
 
     register_route(&server, "/", default_page);
     register_route(&server, "/api", api_front_page);
@@ -139,10 +149,12 @@ int main(void) {
 ## Useful APIs
 
 ```c
-int serve_and_listen(server_t *server, const char *address);
-void init_server(server_t *server);
-void register_route(server_t *server, const char *path, route_handler_fn func);
-typedef void (*route_handler_fn)(client_t *, request_ctx_t *);
+int serve_and_listen(server_t* server, const char *address);
+void init_server(server_t* server);
+void register_route(server_t* server, const char* path, route_handler_fn func);
+typedef void (*route_handler_fn)(response_ctx_t*, request_ctx_t*);
+
+void set_header(response_ctx_t* ctx, const char* header, const char* value);
 ```
 
 ---
@@ -166,16 +178,17 @@ make run
 
 ## Current State
 
-* Multiple client handling via a thread pool
-* Client connections time out after ~5 seconds
-* Blocking I/O model (`recv()` based)
+* Multiple client handling via an event loop and thread pool
+<!-- * Client connections time out after ~10 seconds (default), can be updated. -->
+<!-- * Blocking I/O model (`recv()` based) -->
 * HTTP/1.1 request parsing (no chunked transfer encoding)
 * Basic `GET` method support
-* URL is not split into path and query string
+<!-- * URL is not split into path and query string -->
 * Multiple header values are not fully supported
-* Basic `Connection: keep-alive` handling
+* Basic `Connection: keep-alive` handling, not really. Connection are closed after the response.
 * Routing via hash table lookup
-* Graceful shutdown is incomplete: `SIGINT` does not stop worker threads because `recv()` blocks
+* Static file serving, but connection is closed so same issue, no clean path (path traversal vuln).
+* Graceful shutdown is incomplete.
 
 ---
 
@@ -183,11 +196,10 @@ make run
 
 Planned improvements for a more complete HTTP/1.1 server:
 
-* Static file serving
+* Static file serving (default path is ./www/), if index.html is not present then directory listing.
 * Structured logging
 * Robust error handling
 * Proper connection timeouts
-* Non-blocking I/O or timeout-based shutdown
 * Proper signal handling and graceful termination
 
 ---
