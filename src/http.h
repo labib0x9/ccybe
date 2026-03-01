@@ -19,11 +19,15 @@
 
 #include"url/decoder.h"
 
-#include<sys/event.h>
-#include<sys/types.h>
+#ifdef __APPLE__
+    #include<sys/event.h>
+    #include<sys/types.h>
+#elif defined(__linux__)
+    #include<sys/epoll.h>
+#endif
 
 static const int BUF_SIZE = 2560;
-static const int MAX_KQUEUE_SIZE = 128;
+#define MAX_EVENT_SIZE 1024
 
 // For closing connection response.
 static const char CLOSE_CONN[] =
@@ -43,7 +47,11 @@ typedef struct Server {
     time_t recv_timeout;
     time_t send_timeout;
     // int notify_fd[2];
-    struct kevent events[MAX_KQUEUE_SIZE];
+    #ifdef __APPLE__
+        struct kevent events[MAX_EVENT_SIZE];
+    #elif defined(__linux__)
+        struct epoll_event events[MAX_EVENT_SIZE];
+    #endif
     list_t client_list;
 } server_t;
 

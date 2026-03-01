@@ -18,9 +18,13 @@ int get_mime(char *path) {
 
     printf("[EXT] = %s\n", ext);
 
-    if (strcasecmp(ext, "js") == 0) return JS;
-    if (strcasecmp(ext, "css") == 0) return CSS;
-    if (strcasecmp(ext, "html") == 0) return HTML;
-    if (strcasecmp(ext, "png") == 0) return PNG;
-    return -1;
+    // #ifdef __APPLE__
+        if (strcasecmp(ext, "js") == 0) return JS;
+        if (strcasecmp(ext, "css") == 0) return CSS;
+        if (strcasecmp(ext, "html") == 0) return HTML;
+        if (strcasecmp(ext, "png") == 0) return PNG;
+        return -1;
+    // #elif defined(__linux__)
+    //     if ()
+    // #endif
 }

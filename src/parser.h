@@ -2,6 +2,7 @@
 #define PARSER_H
 
 #include<stdio.h>
+#include<strings.h>
 #include"cnet.h"
 #include<llhttp.h>
 #include"khash.h"

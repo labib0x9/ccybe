@@ -1,8 +1,13 @@
+#define _GNU_SOURCE
+#ifdef __linux__
+
 #include"http.h"
 #include"ds/threadpool.h"
 #include<sys/stat.h>
 #include<sys/unistd.h>
+#include<sys/epoll.h>
 #include<fcntl.h>
+#include<signal.h>
 
 #include"mime.h"
 
@@ -39,13 +44,19 @@ int init_listener(server_t* server, const char *address) {
         return 2;
     }
 
-    struct kevent ev;
-    EV_SET(&ev, server->ln.fd, EVFILT_READ, EV_ADD | EV_CLEAR, 0, 0, NULL);
-    if (kevent(server->efd, &ev, 1, NULL, 0, NULL) < 0) {
-        // goto LISTENER_EVENT_ERR;
+    struct epoll_event ev;
+    ev.events = EPOLLIN;
+    ev.data.fd = server->ln.fd;
+    if (epoll_ctl(server->efd, EPOLL_CTL_ADD, server->ln.fd, &ev) < 0) {
         server->ln.err = 3;
         return 3;
     }
+    // EV_SET(&ev, server->ln.fd, EVFILT_READ, EV_ADD | EV_CLEAR, 0, 0, NULL);
+    // if (kevent(server->efd, &ev, 1, NULL, 0, NULL) < 0) {
+    //     // goto LISTENER_EVENT_ERR;
+    //     server->ln.err = 3;
+    //     return 3;
+    // }
 
     server->ln.err = 0;
     return 0;
@@ -58,10 +69,11 @@ void remove_client(server_t* server, int client_fd) {
         return;
     }
     
-    struct kevent ev[3];
-    EV_SET(&ev[0], client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    // EV_SET(&ev[1], client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-    kevent(server->efd, ev, 1, NULL, 0, NULL);
+    // struct kevent ev[3];
+    // EV_SET(&ev[0], client_fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+    // // EV_SET(&ev[1], client_fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    // kevent(server->efd, ev, 1, NULL, 0, NULL);
+    epoll_ctl(server->efd, EPOLL_CTL_DEL, client_fd, NULL);
 
     conn_close(node->client);
     remove_client_node(client_list, node);
@@ -120,11 +132,15 @@ void handle_conn(void* arg) {
 
     tnode->resp->complete_resp = generate_response(wctx);
 
-    struct kevent ev;
-    EV_SET(&ev, client.fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, tnode);
-    if (kevent(server->efd, &ev, 1, NULL, 0, NULL) < 0) {
-        // what to do..:0)
-    }
+    struct epoll_event ev;
+    ev.events = EPOLLOUT | EPOLLONESHOT;
+    ev.data.ptr = tnode;
+    epoll_ctl(server->efd, EPOLL_CTL_MOD, client.fd, &ev);
+    // struct kevent ev;
+    // EV_SET(&ev, client.fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, tnode);
+    // if (kevent(server->efd, &ev, 1, NULL, 0, NULL) < 0) {
+    //     // what to do..:0)
+    // }
 }
 
 // accepts client connection, set client fd non-blocking
@@ -158,12 +174,19 @@ void accept_client(server_t* server) {
             continue;
         }
 
-        struct kevent ev;
-        EV_SET(&ev, conn.fd, EVFILT_READ, EV_ADD, 0, 0, node);
-        if (kevent(server->efd, &ev, 1, NULL, 0, NULL) < 0) {
+        struct epoll_event ev;
+        ev.events = EPOLLIN | EPOLLET;
+        ev.data.ptr = node;
+        if (epoll_ctl(server->efd, EPOLL_CTL_ADD, conn.fd, &ev) < 0) {
             printf("[%d][][%s:%d] Conn failed\n", conn.fd, conn.c_addr.host, conn.c_addr.port);
             conn_close(conn);
         }
+        // struct kevent ev;
+        // EV_SET(&ev, conn.fd, EVFILT_READ, EV_ADD, 0, 0, node);
+        // if (kevent(server->efd, &ev, 1, NULL, 0, NULL) < 0) {
+        //     printf("[%d][][%s:%d] Conn failed\n", conn.fd, conn.c_addr.host, conn.c_addr.port);
+        //     conn_close(conn);
+        // }
     }
 }
 
@@ -250,9 +273,14 @@ void write_to_client(int client_fd, thread_node_t* tnode) {
         int n = send(client.fd, resp.data + total_send, resp.len - total_send, 0);
         if (n == -1) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                struct kevent ev;
-                EV_SET(&ev, client.fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, tnode);
-                kevent(tnode->server->efd, &ev, 1, NULL, 0, NULL);
+                // struct kevent ev;
+                // EV_SET(&ev, client.fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, tnode);
+                // kevent(tnode->server->efd, &ev, 1, NULL, 0, NULL);
+
+                struct epoll_event ev;
+                ev.events = EPOLLOUT | EPOLLONESHOT;
+                ev.data.ptr = tnode;
+                epoll_ctl(tnode->server->efd, EPOLL_CTL_MOD, client.fd, &ev);
                 return;
             }
             // error, handle allocation
@@ -284,7 +312,7 @@ int serve_and_listen(server_t* server, const char *address) {
     if (init_listener(server, address) != 0) goto LISTENER_ERR;
 
     while (server->shutdown_signal == false) {
-        int n = kevent(server->efd, NULL, 0, server->events, MAX_KQUEUE_SIZE, NULL);
+        int n = epoll_wait(server->efd, server->events, MAX_EVENT_SIZE, -1);
         if (n == -1) {
             if (errno == EINTR) continue;
             // error
@@ -292,36 +320,23 @@ int serve_and_listen(server_t* server, const char *address) {
         }
 
         for (int i = 0; i < n; i++) {
-            struct kevent* e = &server->events[i];
-            int ident = e->ident;
-            void* data = e->udata;
-            int filter = e->filter;
+            struct epoll_event* e = &server->events[i];
+            uint32_t ev = e->events;
 
-            switch (filter) {
-                case EVFILT_READ: {
-                    if (e->flags & EV_EOF) {
-                        remove_client(server, ident);
-                        continue;
-                    }
-                    if (ident == server->ln.fd) {
-                        accept_client(server);
-                    } else {
-                        l_node_t* node = (l_node_t*) data;
-                        read_from_client(server, &node->client);
-                    }
-                    break;
+            if (ev & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
+                remove_client(server, e->data.fd);
+                continue;
+            }
+
+            if (ev & EPOLLIN) {
+                if (e->data.fd == server->ln.fd) {
+                    accept_client(server);
+                } else {
+                    l_node_t* node = (l_node_t*) e->data.ptr;
+                    read_from_client(server, &node->client);
                 }
-                case EVFILT_WRITE: {
-                    write_to_client(ident, (thread_node_t*) data);
-                    break;
-                }
-                case EVFILT_TIMER: {
-                    // handle_client_timeout();
-                    break;
-                }
-                default: {
-                    // [info] filter not found..
-                }
+            } else if (ev & EPOLLOUT) {
+                write_to_client(0, (thread_node_t*) e->data.ptr);
             }
         }
     }
@@ -376,7 +391,7 @@ void init_server(server_t* server) {
     // if (pipe(server->notify_fd) < 0) goto PIPE_SET_ERR;
     // if (set_fd_nonblock(server->notify_fd[0]) < 0) goto PIPE_NON_BLOCK_ERR;
 
-    server->efd = kqueue();
+    server->efd = epoll_create1(0);
     if (server->efd < 0) goto KQUEUE_ERR;
 
     // struct kevent kv;
@@ -402,3 +417,5 @@ void init_server(server_t* server) {
 void register_route(server_t* server, const char* path, route_handler_fn func) {
     route_register(&server->route, path, func);
 }
+
+#endif

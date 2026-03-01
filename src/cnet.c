@@ -44,11 +44,22 @@ void tcp_create_and_listen_ipv4(listener_t* ln) {
         ln->err = 3;
         return;
     }
-    if (setsockopt(ln->fd, SOL_SOCKET, SO_NOSIGPIPE, &opt, sizeof(opt)) == -1) {
-        perror("setcocket error = SO_NOSIGPIPE");
-        ln->err = 3;
-        return;
-    }
+
+    signal(SIGPIPE, SIG_IGN);
+
+    // // SIGPIPE IGNORE.. JUST ignore it..
+    // int flag_sigpipe;
+    // #ifdef __APPLE__
+    //     flag_sigpipe = SO_NOSIGPIPE;
+    // #elif defined(__linux__)
+    //     flag_sigpipe = MSG_NOSIGNAL;
+    // #endif
+
+    // if (setsockopt(ln->fd, SOL_SOCKET, flag_sigpipe, &opt, sizeof(opt)) == -1) {
+    //     perror("setcocket error = SO_NOSIGPIPE");
+    //     ln->err = 3;
+    //     return;
+    // }
     // setsockopt(ln->fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
     // setsockopt(ln->fd, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
 

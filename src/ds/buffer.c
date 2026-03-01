@@ -10,7 +10,12 @@ string_t new_string(char* str) {
 
     tmp.len = len;
     tmp.data = data;
-    strncpy(tmp.data, str, sizeof(char) * len);
+    // #ifdef __APPLE__
+    //     strncpy(tmp.data, str, sizeof(char) * len);
+    // #elif defined(__linux__)
+    //     memcpy(tmp.data, str, len);
+    // #endif
+    strcpy(tmp.data, str);
     tmp.data[len] = '\0';
     
     return tmp;
@@ -44,7 +49,13 @@ bool append_string(string_t* a, string_t* b) {
     char* ptr = (char*) realloc(a->data, sizeof(char) * (a->len + b->len + 1));
     if (ptr == NULL) return false;
     
-    strncpy(ptr + a->len, b->data, sizeof(char) * b->len);
+    // #ifdef __APPLE__
+    //     strncpy(ptr + a->len, b->data, sizeof(char) * b->len);
+    // #elif defined(__linux__)
+    //     memcpy(ptr + a->len, b, b->len);
+    // #endif
+
+    strcpy(ptr + a->len, b->data);
     ptr[a->len + b->len] = '\0';
     a->data = ptr;
     a->len += b->len;
@@ -61,7 +72,13 @@ bool append_string_cstr(string_t* a, char* b) {
     char* ptr = (char*) realloc(a->data, sizeof(char) * (a->len + b_len + 1));
     if (ptr == NULL) return false;
 
-    strncpy(ptr + a->len, b, sizeof(char) * b_len);
+    // #ifdef __APPLE__
+    //     strncpy(ptr + a->len, b, sizeof(char) * b_len);
+    // #elif defined(__linux__)
+    //     memcpy(ptr + a->len, b, b_len);
+    // #endif
+    
+    strcpy(ptr + a->len, b);
     ptr[a->len + b_len] = '\0';
     a->data = ptr;
     a->len += b_len;
