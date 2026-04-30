@@ -1,5 +1,5 @@
-.devcontainer/
-.vscode/
+.devcontainer
+.vscode
 
 build/
 third_party/
