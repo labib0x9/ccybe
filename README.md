@@ -11,10 +11,6 @@ It is **not** a production-ready framework; it is a learning-oriented project. A
 
 ---
 
-## Diagram
-
----
-
 ## Features
 
 * TCP server abstraction (`socket`, `bind`, `listen`, `accept`)
@@ -22,6 +18,52 @@ It is **not** a production-ready framework; it is a learning-oriented project. A
 * Simple routing system (hash table based)
 * Event-loop–based client handling with a thread-pool–based request parser and response generator
 * Static file serving
+
+---
+
+## Getting started
+
+### Prerequisites
+
+- macOS or FreeBSD (kqueue is not available on Linux)
+- GCC
+- Node.js (required to build llhttp from source)
+- GNU Make
+
+### 1. Clone with submodules
+
+```bash
+git clone --recurse-submodules https://github.com/you/clitocybe.git
+cd clitocybe
+```
+
+If you already cloned without `--recurse-submodules`:
+
+```bash
+git submodule update --init --recursive
+```
+
+### 2. Build llhttp
+llhttp generates its C source from a TypeScript definition, so Node.js is
+required once at build time:
+
+```bash
+cd third_party/llhttp     # adjust path to wherever your submodule lives
+npm install
+make
+cd ../..
+```
+
+klib is header-only — no build step needed.
+
+### 3. Build and run
+
+```bash
+make run
+```
+
+The server starts on `:8080` by default. To serve static files, place them
+under `./www/` directory.
 
 ---
 
@@ -155,16 +197,6 @@ void register_route(server_t* server, const char* path, route_handler_fn func);
 typedef void (*route_handler_fn)(response_ctx_t*, request_ctx_t*);
 
 void set_header(response_ctx_t* ctx, const char* header, const char* value);
-```
-
----
-
-## Build And Run
-
-Run the provided Makefile:
-
-```bash
-make run
 ```
 
 ---
