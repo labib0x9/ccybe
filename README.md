@@ -1,4 +1,4 @@
-# clitocybe
+# ccybe
 
 A minimal HTTP server written in C, focused on learning low-level networking, event loops, multithreading, file serving and server architecture.
 
@@ -6,7 +6,7 @@ A minimal HTTP server written in C, focused on learning low-level networking, ev
 
 ## Overview
 
-`clitocybe` provides a thin abstraction over POSIX sockets and HTTP parsing to help you build a basic HTTP/1.1 server without hiding core system concepts.
+`ccybe` provides a thin abstraction over POSIX sockets and HTTP parsing to help you build a basic HTTP/1.1 server without hiding core system concepts.
 It is **not** a production-ready framework; it is a learning-oriented project. Also it uses kqueue for event loop, which is only available in **FreeBSD** based OS (MacOS).
 
 ---
@@ -33,8 +33,8 @@ It is **not** a production-ready framework; it is a learning-oriented project. A
 ### 1. Clone with submodules
 
 ```bash
-git clone --recurse-submodules https://github.com/you/clitocybe.git
-cd clitocybe
+git clone --recurse-submodules https://github.com/labib0x9/ccybe.git
+cd ccybe
 ```
 
 If you already cloned without `--recurse-submodules`:
