@@ -1,13 +1,10 @@
 # ccybe
 
-A minimal HTTP server written in C, focused on learning low-level networking, event loops, multithreading, file serving and server architecture.
+`ccybe` is a minimal HTTP/1.1 server written in raw C, built to expose the underlying system mechanics: sockets, event loops, and thread handling. It's a **learning project**, not a production framework.
 
----
-
-## Overview
-
-`ccybe` provides a thin abstraction over POSIX sockets and HTTP parsing to help you build a basic HTTP/1.1 server without hiding core system concepts.
-It is **not** a production-ready framework; it is a learning-oriented project. Also it uses kqueue for event loop, which is only available in **FreeBSD** based OS (MacOS).
+**Networking:** raw POSIX sockets with manual HTTP/1.1 request parsing
+**Concurrency:** kqueue-based event loop combined with a pthread worker pool
+**Platform:** kqueue is a BSD/Darwin syscall, so this currently runs on **macOS and FreeBSD only** (no Linux support — that would need epoll)
 
 ---
 
@@ -18,6 +15,34 @@ It is **not** a production-ready framework; it is a learning-oriented project. A
 * Simple routing system (hash table based)
 * Event-loop–based client handling with a thread-pool–based request parser and response generator
 * Static file serving
+
+---
+
+## Architecture
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant EventLoop as kqueue Event Loop
+    participant Queue as Work Queue
+    participant Worker as Worker Thread
+
+    Client->>EventLoop: TCP Connect
+    Client->>EventLoop: HTTP Request
+
+    EventLoop->>EventLoop: accept()
+    EventLoop->>EventLoop: READ event
+    EventLoop->>Queue: enqueue(connection)
+
+    Queue->>Worker: dequeue(connection)
+    Worker->>Worker: Parse request (llhttp)
+    Worker->>Worker: Route handler
+    Worker->>Worker: Build response buffer
+    Worker->>EventLoop: Register WRITE event
+
+    EventLoop->>Client: send(response)
+    EventLoop->>Client: close(connection)
+```
 
 ---
 
@@ -211,15 +236,18 @@ void set_header(response_ctx_t* ctx, const char* header, const char* value);
 ## Current State
 
 * Multiple client handling via an event loop and thread pool
-<!-- * Client connections time out after ~10 seconds (default), can be updated. -->
-<!-- * Blocking I/O model (`recv()` based) -->
 * HTTP/1.1 request parsing (no chunked transfer encoding)
 * Basic `GET` method support
-<!-- * URL is not split into path and query string -->
-* Multiple header values are not fully supported
-* Basic `Connection: keep-alive` handling, not really. Connection are closed after the response.
 * Routing via hash table lookup
-* Static file serving, but connection is closed so same issue, no clean path (path traversal vuln).
+* Static file serving
+
+---
+
+## Limitations
+
+* Multiple header values are not fully supported
+* No `Connection: keep-alive` handling. Connections are closed after every response.
+* Static file serving, but connection is closed so same issue and has no path-traversal protection.
 * Graceful shutdown is incomplete.
 
 ---
@@ -230,7 +258,7 @@ Planned improvements for a more complete HTTP/1.1 server:
 
 * Static file serving (default path is ./www/), if index.html is not present then directory listing.
 * Structured logging
-* Robust error handling
+* Error handling
 * Proper connection timeouts
 * Proper signal handling and graceful termination
 
